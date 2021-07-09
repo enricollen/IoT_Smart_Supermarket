@@ -1,7 +1,5 @@
 #include "contiki.h"
 #include "coap-engine.h"
-#include "dev/leds.h"
-
 #include <string.h>
 
 /* Log configuration */
@@ -9,10 +7,11 @@
 #define LOG_MODULE "App"
 #define LOG_LEVEL LOG_LEVEL_APP
 
-static void res_post_put_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+//static void res_post_put_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
 static void res_event_handler(void);
+static void res_get_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
 
-EVENT_RESOURCE(res_event,
+EVENT_RESOURCE(res_obs,
 		"title=\"Event demo\";obs",
 		res_get_handler,
 		NULL,
@@ -37,5 +36,5 @@ static void res_event_handler(void)
 	// Before sending the notification the handler associated with the GET methods is called
 	counter++;
 	//chiama la get qui
-	coap_notify_observers(&res_event);
+	coap_notify_observers(&res_obs);
 }
