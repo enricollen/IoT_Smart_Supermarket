@@ -14,18 +14,11 @@
 #define DEFAULT_PRICE 20.5
 #define MINIMUM_PRICE 0.90
 
-
-#define MAX_PROCESS_NAME_LEN 64
 const char* node_name = "Price Display and CoAP Server";
-char* process_name;
-
-snprintf( (char *) process_name, MAX_PROCESS_NAME_LEN, "[%.*s]: exposed resources: '/price'", node_name);
-
 
 /* Declare and auto-start this file's process */
-PROCESS(contiki_ng_br_coap_server, process_name);
+PROCESS(contiki_ng_br_coap_server, "[Price Display and CoAP Server]: exposed resources: '/price'");
 AUTOSTART_PROCESSES(&contiki_ng_br_coap_server);
-static struct etimer timer;
 
 extern coap_resource_t res_price;
 
@@ -61,7 +54,7 @@ PROCESS_THREAD(contiki_ng_br_coap_server, ev, data){
 
 	coap_activate_resource(&res_price, "price");
 
-  change_price(DEFAULT_PRICE);   //when the sensor is restarted, we reset the current weight to MAX_WEIGHT
+  change_price(DEFAULT_PRICE);   //when the sensor is restarted, we reset the current weight to DEFAULT PRICE
 
   LOG_DBG("[%.*s]: up and running", node_name);
 		

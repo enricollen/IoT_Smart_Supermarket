@@ -31,7 +31,7 @@ static void
 res_get_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
 	coap_set_header_content_format(response, APPLICATION_JSON);
-	snprintf((char *)buffer, COAP_MAX_CHUNK_SIZE, "{\"current_price\": %f, \"current_ts\": %lu, \"last_change_ts\": %lu, \"unit\": \"euros\"}", current_price, clock_seconds(), last_price_change);
+	snprintf((char *)buffer, COAP_MAX_CHUNK_SIZE, "{\"price\": %.2f, \"current_ts\": %lu, \"last_change_ts\": %lu}", current_price, clock_seconds(), last_price_change);
     coap_set_payload(response, (uint8_t *)buffer, strlen((char *)buffer));
 }
 
@@ -81,7 +81,7 @@ static void res_post_put_handler(coap_message_t *request, coap_message_t *respon
 		return;
 	}
 
-	snprintf((char *)buffer, COAP_MAX_CHUNK_SIZE, "{\"price_updated\": true, \"last_change_ts\": %lu, \"unit\": \"seconds\"}", last_price_change);
+	snprintf((char *)buffer, COAP_MAX_CHUNK_SIZE, "{\"price_updated\": true, \"last_change_ts\": %lu}", last_price_change);
 	coap_set_payload(response, (uint8_t *)buffer, strlen((char *)buffer));
 
 }

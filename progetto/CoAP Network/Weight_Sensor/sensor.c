@@ -16,16 +16,11 @@
 #define MIN_WEIGHT 0
 #define TRESHOLD_WEIGHT 200
 
-
-#define MAX_PROCESS_NAME_LEN 64
 const char* node_name = "Weight&Refill Sensors and CoAP Server";
-char* process_name;
-
-snprintf( (char *) process_name, MAX_PROCESS_NAME_LEN, "[%.*s]: exposed resources: '/weight', '/refill'", node_name);
 
 
 /* Declare and auto-start this file's process */
-PROCESS(contiki_ng_br_coap_server, process_name); //"Weight&Refill Sensors and CoAP Server"
+PROCESS(contiki_ng_br_coap_server, "[Weight&Refill Sensors and CoAP Server]: exposed resources: '/weight', '/refill'"); //"Weight&Refill Sensors and CoAP Server"
 AUTOSTART_PROCESSES(&contiki_ng_br_coap_server);
 static struct etimer timer;
 
