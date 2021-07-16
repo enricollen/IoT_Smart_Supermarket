@@ -16,8 +16,16 @@
 #define MIN_WEIGHT 0
 #define TRESHOLD_WEIGHT 200
 
+
+#define MAX_PROCESS_NAME_LEN 64
+const char* node_name = "Weight&Refill Sensors and CoAP Server";
+char* process_name;
+
+snprintf( (char *) process_name, MAX_PROCESS_NAME_LEN, "[%.*s]: exposed resources: '/weight', '/refill'", node_name);
+
+
 /* Declare and auto-start this file's process */
-PROCESS(contiki_ng_br_coap_server, "Contiki-NG Border Router and CoAP Server");
+PROCESS(contiki_ng_br_coap_server, process_name); //"Weight&Refill Sensors and CoAP Server"
 AUTOSTART_PROCESSES(&contiki_ng_br_coap_server);
 static struct etimer timer;
 
@@ -44,7 +52,7 @@ void refill_shelf(){
 
 void measure_weight(){
   
-  current_weight = ( rand() % (MAX_WEIGHT - MIN_WEIGHT + 1) ) + MIN_WEIGHT;
+  current_weight = ( rand() % (current_weight - MIN_WEIGHT + 1) ) + MIN_WEIGHT; //the weight can only decrease by a random value
 
   if(current_weight < TRESHOLD_WEIGHT){
     //internal automation that refills the shelf whenever it is nearly empty
@@ -62,6 +70,8 @@ PROCESS_THREAD(contiki_ng_br_coap_server, ev, data){
   coap_activate_resource(&res_refill, "refill");
 
   refill_shelf();   //when the sensor is restarted, we reset the current weight to MAX_WEIGHT
+
+  LOG_DBG("[%.*s]: up and running", node_name);
 	
   while(1){
     PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&timer));
