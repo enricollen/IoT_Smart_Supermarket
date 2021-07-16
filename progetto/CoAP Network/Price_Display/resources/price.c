@@ -8,55 +8,72 @@
 #define LOG_MODULE "App"
 #define LOG_LEVEL LOG_LEVEL_APP
 
+//maybe it is better to create a globals.h file for those things
 extern long last_price_change;
+extern float current_price;
+extern void change_price(float updated_price);
+extern bool check_price_validity(float price);
+//--------------------------------------------------------------
 
 static void res_post_put_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
 static void res_get_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
 
-EVENT_RESOURCE(res_refill,
-		"title=\"weight value\";obs",
+EVENT_RESOURCE(res_price,
+		"title=\"price handler\";",
 		res_get_handler,
 		res_post_put_handler,
 		res_post_put_handler,
 		NULL,
 		NULL);
 
-//risposta alla get standard
+
 static void
 res_get_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
 	coap_set_header_content_format(response, APPLICATION_JSON);
-	snprintf((char *)buffer, COAP_MAX_CHUNK_SIZE, "{\"current_ts\": %lu, \"last_refill_ts\": %lu, \"unit\": \"seconds\"}", clock_seconds(), last_refill_ts);
+	snprintf((char *)buffer, COAP_MAX_CHUNK_SIZE, "{\"current_price\": %f, \"current_ts\": %lu, \"last_change_ts\": %lu, \"unit\": \"euros\"}", current_price, clock_seconds(), last_price_change);
     coap_set_payload(response, (uint8_t *)buffer, strlen((char *)buffer));
 }
 
 static void res_post_put_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset){
 
-	//check if in the body of the request "refill" == true
-
 	if(request != NULL) {
 		LOG_DBG("POST Request Received\n");
 	}
-		
-	size_t len = 0;
-	const char *refill = NULL;
-	int success = 1;
 
-	if((len = coap_get_post_variable(request, "refill", &refill))) {
-		LOG_DBG("refill %.*s\n", (int)len, refill);
+	//check if in the body of the request is present "new_price", parse float and updates the current_price
+
+	size_t len = 0;
+	const char *new_price_str = NULL;
+	float new_price = 0;
+	int success = 1;
+	bool is_acceptable = 0;
+
+
+
+	if((len = coap_get_post_variable(request, "new_price", &new_price_str))) {
+
+		//use atof() to parse float from the received string		| atof() is from <string.h> library
+		new_price = atof(new_price_str);
+
+		//we need to check if the received price is acceptable
+		is_acceptable = check_price_validity(new_price);
 		
-		if(strncmp(refill, "TRUE", len) == 0 || strncmp(refill, "true", len) == 0  ) {
-			//do refill
-			refill_shelf();
-		} else if( strncmp(refill, "FALSE", len) == 0 || strncmp(refill, "false", len) == 0 ){
-			success = 1;
+		LOG_DBG("[price-resource | POST/PUT HANDLER] received 'new_price' | str_value : %.*s \t float_value : %f\n", (int)len, new_price_str, new_price);
+		
+		if( is_acceptable ) {
+			//do update
+			change_price(new_price);
+
 		} else {
 			success = 0;
+			LOG_DBG("[price-resource | POST/PUT HANDLER] ERROR: the received price is not acceptable");
 		}
 
 	} else {
-		//if len of post variable "refill" is 0
+		//if len of post variable "new_price" is 0
 		success = 0;
+		LOG_DBG("[price-resource | POST/PUT HANDLER] ERROR: missing required parameter 'new_price'");
 	}
 	
 	if(!success) {
@@ -64,8 +81,7 @@ static void res_post_put_handler(coap_message_t *request, coap_message_t *respon
 		return;
 	}
 
-	//memset(buffer, 0x0, strlen(buffer));
-	snprintf((char *)buffer, COAP_MAX_CHUNK_SIZE, "{\"refilled\": true, \"last_refill_ts\": %lu, \"unit\": \"seconds\"}", last_refill_ts);
+	snprintf((char *)buffer, COAP_MAX_CHUNK_SIZE, "{\"price_updated\": true, \"last_change_ts\": %lu, \"unit\": \"seconds\"}", last_price_change);
 	coap_set_payload(response, (uint8_t *)buffer, strlen((char *)buffer));
 
 }

@@ -12,6 +12,7 @@
 #define LOG_LEVEL LOG_LEVEL_APP
 
 #define DEFAULT_PRICE 20.5
+#define MINIMUM_PRICE 0.90
 
 /* Declare and auto-start this file's process */
 PROCESS(contiki_ng_br_coap_server, "Contiki-NG Border Router and CoAP Server");
@@ -32,10 +33,18 @@ void change_price(float updated_price){
   //refill the shelf
   current_price = updated_price;
 
-  
   //saves the last refill timestamp
   last_price_change = clock_seconds();
 
+}
+
+bool check_price_validity(float price){
+
+  if(price < MINIMUM_PRICE){
+    return false;
+  }
+
+  return true;
 }
 
 PROCESS_THREAD(contiki_ng_br_coap_server, ev, data){
