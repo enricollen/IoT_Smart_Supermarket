@@ -14,8 +14,16 @@
 #define DEFAULT_PRICE 20.5
 #define MINIMUM_PRICE 0.90
 
+
+#define MAX_PROCESS_NAME_LEN 64
+const char* node_name = "Price Display and CoAP Server";
+char* process_name;
+
+snprintf( (char *) process_name, MAX_PROCESS_NAME_LEN, "[%.*s]: exposed resources: '/price'", node_name);
+
+
 /* Declare and auto-start this file's process */
-PROCESS(contiki_ng_br_coap_server, "Contiki-NG Border Router and CoAP Server");
+PROCESS(contiki_ng_br_coap_server, process_name);
 AUTOSTART_PROCESSES(&contiki_ng_br_coap_server);
 static struct etimer timer;
 
@@ -54,6 +62,8 @@ PROCESS_THREAD(contiki_ng_br_coap_server, ev, data){
 	coap_activate_resource(&res_price, "price");
 
   change_price(DEFAULT_PRICE);   //when the sensor is restarted, we reset the current weight to MAX_WEIGHT
+
+  LOG_DBG("[%.*s]: up and running", node_name);
 		
   PROCESS_END();
 }
