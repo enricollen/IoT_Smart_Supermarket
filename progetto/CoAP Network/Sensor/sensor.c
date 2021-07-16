@@ -20,7 +20,9 @@
 PROCESS(contiki_ng_br_coap_server, "Contiki-NG Border Router and CoAP Server");
 AUTOSTART_PROCESSES(&contiki_ng_br_coap_server);
 static struct etimer timer;
+
 extern coap_resource_t res_weight;
+extern coap_resource_t res_refill;
 
 //------------------------------
 //SENSOR INFOS:
@@ -57,6 +59,7 @@ PROCESS_THREAD(contiki_ng_br_coap_server, ev, data){
   etimer_set(&timer, 5*CLOCK_SECOND);
 
 	coap_activate_resource(&res_weight, "weight");
+  coap_activate_resource(&res_refill, "refill");
 
   refill_shelf();   //when the sensor is restarted, we reset the current weight to MAX_WEIGHT
 	
