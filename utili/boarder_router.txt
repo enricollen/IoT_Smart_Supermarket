@@ -1,5 +1,5 @@
 Use the tunslip6:
-• cd examples/rpl-border-router
+• cd contiki-ng/examples/rpl-border-router
 • make TARGET=cooja connect-router-cooja
 
 cooja border router:

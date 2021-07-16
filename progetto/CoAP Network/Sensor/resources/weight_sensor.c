@@ -8,8 +8,12 @@
 #define LOG_MODULE "App"
 #define LOG_LEVEL LOG_LEVEL_APP
 
-static void res_post_put_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
-static void res_weight_handler(void);
+extern long current_weight;
+extern long last_refill_ts;
+
+//static void res_post_put_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void res_get_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void res_weight_obs_handler(void);
 
 EVENT_RESOURCE(res_weight,
 		"title=\"weight value\";obs",
@@ -24,7 +28,9 @@ static void
 res_get_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
 	coap_set_header_content_format(response, APPLICATION_JSON);
-	snprintf((char *)buffer, COAP_MAX_CHUNK_SIZE, "{\"weight\": %d, \"current_timestamp\": %lu, \"last_refill_timestamp\": %lu, \"unit\": \"gram\"}", current_weight, clock_seconds(), last_refill_ts);
+	snprintf((char *)buffer, COAP_MAX_CHUNK_SIZE, "{\"weight\": %ld, \"current_timestamp\": %lu, \"last_refill_timestamp\": %lu, \"unit\": \"gram\"}", current_weight, clock_seconds(), last_refill_ts);
+    coap_set_payload(response, (uint8_t *)buffer, strlen((char *)buffer));
+	snprintf((char *)buffer, COAP_MAX_CHUNK_SIZE, "{\"asd\": %ld, \"current_timestamp\": %lu, \"last_refill_timestamp\": %lu, \"unit\": \"gram\"}", current_weight, clock_seconds(), last_refill_ts);
     coap_set_payload(response, (uint8_t *)buffer, strlen((char *)buffer));
 }
 
