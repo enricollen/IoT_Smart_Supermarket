@@ -1,0 +1,28 @@
+PER INSTALLARE UN container CAPACE DI GESTIRE CORRETTAMENTE cooja simulator:
+
+https://github.com/contiki-ng/contiki-ng/wiki/Docker
+
+------------------
+RIASSUNTINO PER SICUREZZA:
+
+sudo apt-get install docker-ce  #occorre prima aggiungere la repo di docker (https://docs.docker.com/install/linux/docker-ce/ubuntu/#install-docker-ce)
+
+sudo usermod -aG docker <your-user> #aggiunge al gruppo 'docker' il proprio utente
+
+docker pull contiker/contiki-ng
+
+$ git clone https://github.com/contiki-ng/contiki-ng.git
+$ cd contiki-ng
+$ git submodule update --init --recursive
+#clona la repo di contiki-ng (di normale va bene nella home del proprio utente)
+
+a questo punto per avviare correttamente va bene un comando simile a quello che viene assegnato all'alias che segue:
+
+ATTENZIONE:
+affinché tunslip6 funzioni correttamente dal sistema host, occorre creare un alias come quello di seguito, che ha le opzioni necessarie a collegare le porte del container con quello dell'host
+-----
+nella home dell'utente creare il file .bash_aliases e scriverci all'interno:
+    alias contikier="docker run --privileged --network host --mount type=bind,source=/home/user/contiki-ng,destination=/home/user/contiki-ng -e DISPLAY=:0 -v /tmp/.X11-unix:/tmp/.X11-unix -v /dev/bus/usb:/dev/bus/usb -ti contiker/contiki-ng"
+
+    N.B.:
+    al posto di user scrivere il proprio nome utente
