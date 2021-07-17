@@ -29,7 +29,7 @@ AUTOSTART_PROCESSES(&mqtt_client_process);
  
 #define HIGH_TEMP_TRESHOLD 8.0
 #define LOW_TEMP_TRESHOLD -4.0
-#define MAX_DIFF 20    //10 times maximum diff between u and i
+#define MAX_DIFF 20    //10 times maximum diff
 
 float current_temperature = 2.5;
 
@@ -37,7 +37,7 @@ enum DOOR_STATE {OPEN, CLOSED};
 
 enum DOOR_STATE door_state = CLOSED;
 
-bool roll_dice(int probability=50){
+bool roll_dice(int probability){
 
     if(random() % 100 <= probability){
         return true;
