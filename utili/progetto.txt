@@ -1,8 +1,0 @@
-PROGETTO SUPERMERCATO:
-- SENSORI:
-     - temperatura frigoriferi
-     - peso scaffali
-     - prezzo corrente della merce
-- ATTUATORI:
-     - modifica prezzo merce
-     - allarme / luce per segnalare avaria frigorifero

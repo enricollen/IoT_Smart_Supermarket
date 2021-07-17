@@ -1,6 +1,0 @@
-Use the tunslip6:
-• cd contiki-ng/examples/rpl-border-router
-• make TARGET=cooja connect-router-cooja
-
-cooja border router:
-• Tools -> Serial Socket (SERVER) -> Contiki 1 – Press START
