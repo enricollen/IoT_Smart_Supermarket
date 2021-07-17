@@ -29,7 +29,7 @@ AUTOSTART_PROCESSES(&mqtt_client_process);
  
 #define HIGH_TEMP_TRESHOLD 8.0
 #define LOW_TEMP_TRESHOLD -4.0
-#define MAX_DIFF 20    //10 times maximum diff between u and i
+#define MAX_DIFF 20    //10 times maximum diff
 
 float current_temperature = 2.5;
 
@@ -37,7 +37,7 @@ enum DOOR_STATE {OPEN, CLOSED};
 
 enum DOOR_STATE door_state = CLOSED;
 
-bool roll_dice(int probability=50){
+bool roll_dice(int probability){
 
     if(random() % 100 <= probability){
         return true;
@@ -76,7 +76,7 @@ void sense_temperature(){
     }else{
         float diff = ((float)(random() % MAX_DIFF)) / 10.0;
 
-        if(roll_dice()){
+        if(roll_dice(50)){
             diff *= -1.0;
         }
 
@@ -90,14 +90,10 @@ void sense_temperature(){
 static struct etimer periodic_timer;
 static int period = 0;
 
-/*---------------------------------------------------------------------------*/
 static struct mqtt_message *msg_ptr = 0;
 static struct mqtt_connection conn;
 
-
-
 #include "mqtt_event_handler.c"
-
 
 PROCESS_THREAD(mqtt_client_process, ev, data)
 {
@@ -172,7 +168,7 @@ PROCESS_THREAD(mqtt_client_process, ev, data)
                         sense_temperature();
                         
                         // Publish something
-                        sprintf(pub_topic, "fridge/%d/temperature", client_id); //a different topic for each temperature sensor node
+                        sprintf(pub_topic, "fridge/%s/temperature", client_id); //a different topic for each temperature sensor node
 
                         sprintf(app_buffer, "{\"temperature\": %.2f, \"timestamp\": %lu, \"unit\": \"celsius\"}", current_temperature, clock_seconds());
                         mqtt_publish(&conn, NULL, pub_topic, (uint8_t *)app_buffer,
@@ -192,4 +188,3 @@ PROCESS_THREAD(mqtt_client_process, ev, data)
 
   PROCESS_END();
 }
-/*---------------------------------------------------------------------------*/
