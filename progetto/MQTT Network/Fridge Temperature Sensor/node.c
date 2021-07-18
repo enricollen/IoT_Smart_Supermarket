@@ -37,6 +37,8 @@ enum DOOR_STATE {OPEN, CLOSED};
 
 enum DOOR_STATE door_state = CLOSED;
 
+#define DEFAULT_PROBABILITY 50
+
 bool roll_dice(int probability){
 
     if(random() % 100 <= probability){
@@ -76,7 +78,7 @@ void sense_temperature(){
     }else{
         float diff = ((float)(random() % MAX_DIFF)) / 10.0;
 
-        if(roll_dice()){
+        if(roll_dice(DEFAULT_PROBABILITY)){
             diff *= -1.0;
         }
 
@@ -172,7 +174,7 @@ PROCESS_THREAD(mqtt_client_process, ev, data)
                         sense_temperature();
                         
                         // Publish something
-                        sprintf(pub_topic, "fridge/%d/temperature", client_id); //a different topic for each temperature sensor node
+                        sprintf(pub_topic, "fridge/%s/temperature", client_id); //a different topic for each temperature sensor node
 
                         sprintf(app_buffer, "{\"temperature\": %.2f, \"timestamp\": %lu, \"unit\": \"celsius\"}", current_temperature, clock_seconds());
                         mqtt_publish(&conn, NULL, pub_topic, (uint8_t *)app_buffer,

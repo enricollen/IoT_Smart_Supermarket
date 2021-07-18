@@ -87,6 +87,3 @@ have_connectivity(void)
   }
   return true;
 }
-static void record_measure(){
-        value = 35 + random_rand()%(41-35+1);
-}
