@@ -97,8 +97,45 @@ static struct mqtt_message *msg_ptr = 0;
 static struct mqtt_connection conn;
 
 
-
 #include "mqtt_event_handler.c"
+
+
+int ip_str_len = 0;
+
+void test_function(const char * host){
+    //char broker_address[CONFIG_IP_ADDR_STR_LEN];
+    //char * broker_address = MQTT_CLIENT_BROKER_IP_ADDR;
+
+    uip_ip6addr_t ip6addr;
+
+    printf("[test_function] begin\n");
+    printf("[test_function]: trying on : '%s'\n", host);
+
+    
+    /* convert the string IPv6 address to a numeric IPv6 address */
+    if(uiplib_ip6addrconv(host, &ip6addr) == 0) {
+        printf("[test_function] ERROR: uiplib_ip6addrconv returned 0\n");
+        return;
+    }
+    printf("[test_function] ok | IP6ADDR \n"); //, (int) uip_ip6addr_t);
+    ip_str_len = strlen(host);
+    printf("[test_function]: trew on : '%s' | len = %d\n", host, ip_str_len);
+}
+
+void check_broker_ip_string(char * broker_address){
+    int len = strlen(broker_address);
+    if(len != ip_str_len){
+        printf("[check_broker_ip_string] broker_address strlen = %d\n REPASTING :@\n", len);
+        
+        snprintf((char *) broker_address, CONFIG_IP_ADDR_STR_LEN, "%s", broker_ip);
+
+    }
+    else{
+        printf("[check_broker_ip_string]: ok | strlen = %d\n", len);
+    }
+
+    printf("[check_broker_ip_string] END | broker_address is now: '%s'\n");
+}
 
 
 PROCESS_THREAD(mqtt_client_process, ev, data)
@@ -112,6 +149,11 @@ PROCESS_THREAD(mqtt_client_process, ev, data)
 
   // Initialize the ClientID as MAC address
   initialize_client_id(client_id);
+
+  snprintf((char *) broker_address, CONFIG_IP_ADDR_STR_LEN, "%s", broker_ip);
+
+  int counter_checks = 0;
+  test_function(broker_address);
 
 /*
   char t[11];
@@ -132,7 +174,7 @@ PROCESS_THREAD(mqtt_client_process, ev, data)
   while(1) {
 
     PROCESS_YIELD();
-
+    
     if((ev == PROCESS_EVENT_TIMER && data == &periodic_timer) || (ev == PROCESS_EVENT_POLL)){
 
         if(state==STATE_INIT){
@@ -142,12 +184,29 @@ PROCESS_THREAD(mqtt_client_process, ev, data)
 
         if(state == STATE_NET_OK){
             // Connect to MQTT broker
-            printf("Connecting to MQTT broker...\n");
-            memcpy(broker_address, broker_ip, strlen(broker_ip));
+            if(counter_checks < 10){
+                check_broker_ip_string(broker_address);
+                counter_checks++;
+            }   
 
-            mqtt_connect(&conn, broker_address, DEFAULT_BROKER_PORT, DEFAULT_PUBLISH_INTERVAL / CLOCK_SECOND, MQTT_CLEAN_SESSION_ON);
+            printf("Connecting to MQTT broker IP:'%s'...\n", broker_address);
+
+            status = mqtt_connect(&conn, broker_address, DEFAULT_BROKER_PORT, (DEFAULT_PUBLISH_INTERVAL * 3 )/ CLOCK_SECOND, MQTT_CLEAN_SESSION_ON);
             
-            state = STATE_CONNECTING;
+            if(status == MQTT_STATUS_OK){
+                printf("[mqtt_connect]: connected successfully!\n");
+                state = STATE_CONNECTING;
+
+            }else{
+                printf("[mqtt_connect]: an error occurred :(\n");
+                if(status == MQTT_STATUS_ERROR){
+                    printf("[mqtt_connect]: status == MQTT_STATUS_ERROR\n");
+                }else{
+                    printf("[mqtt_connect] ERROR NUMBER: %d \n", (int) status);
+                }
+                
+            }
+
         }
 
         //mqtt_event() function will update 'state' to STATE_CONNECTED whenever it will receives a MQTT_EVENT_CONNECTED event

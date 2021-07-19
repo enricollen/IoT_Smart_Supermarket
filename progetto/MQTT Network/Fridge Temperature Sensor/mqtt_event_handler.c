@@ -1,3 +1,5 @@
+//#include "mqtt_config.h"
+
 /*---------------------------------------------------------------------------*/
 static void pub_handler(const char *topic, uint16_t topic_len, const uint8_t *chunk,
             uint16_t chunk_len)
@@ -26,6 +28,8 @@ printf("%s\n", chunk);
 static void
 mqtt_event(struct mqtt_connection *m, mqtt_event_t event, void *data)
 {
+  printf("[mqtt_event] begin...\n");
+
   switch(event) {
   case MQTT_EVENT_CONNECTED: {
     printf("Application has a MQTT connection\n");
