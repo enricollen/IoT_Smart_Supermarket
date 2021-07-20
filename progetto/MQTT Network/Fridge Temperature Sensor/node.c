@@ -7,7 +7,7 @@
 #include "net/ipv6/sicslowpan.h"
 
 #include "sys/etimer.h"
-//#include "lib/sensors.h"
+#include "lib/sensors.h"
 #include "os/sys/log.h"
 #include <sys/node-id.h>
 
@@ -15,6 +15,7 @@
 
 #define LOG_MODULE "mqtt-client"
 #define LOG_LEVEL LOG_LEVEL_DBG
+
 
 
 #include "mqtt_config.h"
@@ -190,9 +191,9 @@ PROCESS_THREAD(mqtt_client_process, ev, data)
                 counter_checks++;
             }*/  
 
-            printf("Connecting to MQTT broker IP:'%s'...\n", MQTT_CLIENT_BROKER_IP_ADDR);   //broker_address
+            printf("Connecting to MQTT broker IP:'%s'...\n", broker_address);   //broker_address
 
-            status = mqtt_connect(&conn, MQTT_CLIENT_BROKER_IP_ADDR, DEFAULT_BROKER_PORT, (DEFAULT_PUBLISH_INTERVAL * 3 )/ CLOCK_SECOND, MQTT_CLEAN_SESSION_ON);
+            status = mqtt_connect(&conn, broker_address, DEFAULT_BROKER_PORT, (DEFAULT_PUBLISH_INTERVAL * 3 )/ CLOCK_SECOND, MQTT_CLEAN_SESSION_ON);
             
             if(status == MQTT_STATUS_OK){
                 printf("[mqtt_connect]: connected successfully!\n");
