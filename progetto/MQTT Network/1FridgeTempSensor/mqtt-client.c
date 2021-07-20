@@ -108,8 +108,15 @@ PROCESS(mqtt_client_process, "MQTT Client");
 #define HIGH_TEMP_TRESHOLD 8.0
 #define LOW_TEMP_TRESHOLD -4.0
 #define MAX_DIFF 20    //10 times maximum diff
+#define THERMOSTAT_DELTA 2
+#define INERTIAL_DELTA THERMOSTAT_DELTA+1
 
-float current_temperature = 2.5;
+
+bool compressor_state = false;
+
+float desired_temperature = 0.0;
+
+float current_temperature = desired_temperature;
 
 enum DOOR_STATE {OPEN, CLOSED};
 
@@ -154,14 +161,39 @@ void sense_temperature(){
         current_temperature += 1.0;
 
     }else{
-        float diff = ((float)(random() % MAX_DIFF)) / 10.0;
+        /*float diff = ((float)(random() % MAX_DIFF)) / 10.0;
 
         if(roll_dice(DEFAULT_PROBABILITY)){
             diff *= -1.0;
         }
 
         current_temperature += diff;
+        */
+       if(current_temperature > desired_temperature){
+         compressor_state = true;
+         if(current_temperature > desired_temperature + INERTIAL_DELTA){
+           current_temperature -= 0.1;
+         }
+         else{
+           current_temperature += 0.1;
+         }
+       }
+       else{
+         if(current_temperature + THERMOSTAT_DELTA < desired_temperature){
+           compressor_state = false;
+         }
+         if(compressor_state==true){
+           current_temperature -= 0.1;
+         }
+         else{
+           current_temperature += 0.1;
+         }
+       }
     }
+}
+
+void update_desired_temp(float new_desired_temperature){
+  desired_temperature = new_desired_temperature;
 }
 
 #endif
@@ -174,10 +206,18 @@ pub_handler(const char *topic, uint16_t topic_len, const uint8_t *chunk,
   printf("Pub Handler: topic='%s' (len=%u), chunk_len=%u\n", topic,
           topic_len, chunk_len);
 
-  if(strcmp(topic, "actuator") == 0) {
-    printf("Received Actuator command\n");
-	printf("%s\n", chunk);
-    // Do something :)
+  if(strcmp(topic, sub_topic) == 0) {
+    printf("Received Desired Temperature: %s\n", chunk);
+	  float received_temp = atof(chunk);
+    if(received_temp==0.0){
+      if(chunk[0]=='0')
+        update_desired_temp(received_temp);
+      else
+        LOG_DBG("[pub_handler]: Received temperature is not acceptable.\n");
+    }
+    else{
+      update_desired_temp(received_temp);
+    }
     return;
   }
 }
@@ -325,7 +365,7 @@ PROCESS_THREAD(mqtt_client_process, ev, data)
 
 			  // Subscribe to a topic
 			  #if ENABLE_PREPARE_MQTT_TOPIC_STRING
-        sprintf(sub_topic, "fridge/%s/desidered_temp", client_id);
+        sprintf(sub_topic, "fridge/%s/desired_temp", client_id);
 
         #else
         strcpy(sub_topic,"actuator");
