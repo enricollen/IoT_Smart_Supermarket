@@ -21,6 +21,8 @@
 #else
 #define LOG_LEVEL LOG_LEVEL_DBG
 #endif
+#undef LOG_LEVEL
+#define LOG_LEVEL LOG_LEVEL_DBG
 
 /*---------------------------------------------------------------------------*/
 /* MQTT broker address. */
@@ -36,15 +38,12 @@ static const char *broker_ip = MQTT_CLIENT_BROKER_IP_ADDR;
 // We assume that the broker does not require authentication
 
 /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
-#define ENABLE_SENSE_TEMPERATURE false
-#define ENABLE_MQTT_PUBLISH false
-#define ENABLE_PERIODIC_PUBLISH false
+#define ENABLE_SENSE_TEMPERATURE true
+#define ENABLE_MQTT_PUBLISH true
+#define ENABLE_PERIODIC_PUBLISH true
 #define ENABLE_HANDLE_MQTT_CONNECT_RETURN_STATUS false
-#define ENABLE_PUBLISH_CURRENT_STATE false
-#define ENABLE_HANDLE_MQTT_CONNECT_RETURN_STATUS false
-#define ENABLE_PREPARE_MQTT_TOPIC_STRING false
-
-
+#define ENABLE_PUBLISH_CURRENT_STATE true
+#define ENABLE_PREPARE_MQTT_TOPIC_STRING true
 /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 /*---------------------------------------------------------------------------*/
@@ -74,7 +73,9 @@ AUTOSTART_PROCESSES(&mqtt_client_process);
 #define BUFFER_SIZE 64
 
 static char client_id[BUFFER_SIZE];
+#if ENABLE_PUBLISH_CURRENT_STATE
 static char pub_topic[BUFFER_SIZE];
+#endif
 static char sub_topic[BUFFER_SIZE];
 
 
@@ -88,7 +89,9 @@ static struct etimer periodic_timer;
  * We will need to increase if we start publishing more data.
  */
 #define APP_BUFFER_SIZE 512
+#if ENABLE_PUBLISH_CURRENT_STATE
 static char app_buffer[APP_BUFFER_SIZE];
+#endif
 /*---------------------------------------------------------------------------*/
 static struct mqtt_message *msg_ptr = 0;
 
@@ -322,16 +325,15 @@ PROCESS_THREAD(mqtt_client_process, ev, data)
 
 			  // Subscribe to a topic
 			  #if ENABLE_PREPARE_MQTT_TOPIC_STRING
-        char t[64];
-        sprintf(t, "fridge/%s/desidered_temp", client_id);
-        strcpy(sub_topic,t);
+        sprintf(sub_topic, "fridge/%s/desidered_temp", client_id);
+
         #else
         strcpy(sub_topic,"actuator");
         #endif
 
 			  status = mqtt_subscribe(&conn, NULL, sub_topic, MQTT_QOS_LEVEL_0);
 
-			  printf("Subscribing!\n");
+			  printf("Subscribed!\n");
 			  if(status == MQTT_STATUS_OUT_QUEUE_FULL) {
 				LOG_ERR("Tried to subscribe but command queue was full!\n");
 				PROCESS_EXIT();
@@ -356,7 +358,7 @@ PROCESS_THREAD(mqtt_client_process, ev, data)
         #if ENABLE_PUBLISH_CURRENT_STATE
         // Publish something
         sprintf(pub_topic, "fridge/%s/temperature", client_id); //a different topic for each temperature sensor node
-
+        LOG_DBG("[Publish Topic]: %s\n", pub_topic);
         sprintf(app_buffer, "{\"temperature\": %.2f, \"timestamp\": %lu, \"unit\": \"celsius\"}", current_temperature, clock_seconds());
         mqtt_publish(&conn, NULL, pub_topic, (uint8_t *)app_buffer,
                 strlen(app_buffer), MQTT_QOS_LEVEL_0, MQTT_RETAIN_OFF);
@@ -367,13 +369,10 @@ PROCESS_THREAD(mqtt_client_process, ev, data)
 		   // Recover from error
        state = STATE_INIT;
 		}
-
     period++;
 		
-		etimer_set(&periodic_timer, STATE_MACHINE_PERIODIC);
-      
+		etimer_set(&periodic_timer, STATE_MACHINE_PERIODIC); 
     }
-
   }
 
   PROCESS_END();
