@@ -10,7 +10,7 @@
 #include "net/ipv6/sicslowpan.h"
 
 #include "sys/etimer.h"
-//#include "lib/sensors.h"
+#include "lib/sensors.h"
 #include "os/sys/log.h"
 #include <sys/node-id.h>
 
@@ -18,6 +18,7 @@
 
 #define LOG_MODULE "mqtt-client"
 #define LOG_LEVEL LOG_LEVEL_DBG
+
 
 
 #include "mqtt_config.h"
