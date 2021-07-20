@@ -1,3 +1,6 @@
+#define UIP_CONF_TCP 1
+
+
 #include "contiki.h"
 #include "net/routing/routing.h"
 #include "mqtt.h"
@@ -99,7 +102,7 @@ static struct mqtt_connection conn;
 
 #include "mqtt_event_handler.c"
 
-
+#define MULTIPLE_CHECKS false
 int ip_str_len = 0;
 
 void test_function(const char * host){
@@ -127,7 +130,7 @@ void check_broker_ip_string(char * broker_address){
     if(len != ip_str_len){
         printf("[check_broker_ip_string] broker_address strlen = %d\n REPASTING :@\n", len);
         
-        snprintf((char *) broker_address, CONFIG_IP_ADDR_STR_LEN, "%s", broker_ip);
+        //snprintf((char *) broker_address, ip_str_len + 1, "%s", broker_ip);
 
     }
     else{
@@ -151,8 +154,9 @@ PROCESS_THREAD(mqtt_client_process, ev, data)
   initialize_client_id(client_id);
 
   snprintf((char *) broker_address, CONFIG_IP_ADDR_STR_LEN, "%s", broker_ip);
-
-  //int counter_checks = 0;
+  #if MULTIPLE_CHECKS
+  int counter_checks = 0;
+  #endif
   test_function(broker_address);
 
 /*
@@ -184,15 +188,19 @@ PROCESS_THREAD(mqtt_client_process, ev, data)
 
         if(state == STATE_NET_OK){
             // Connect to MQTT broker
-
-            /*if(counter_checks < 10){
+   
+            #if MULTIPLE_CHECKS
+            if(counter_checks < 10){
                 check_broker_ip_string(broker_address);
+                snprintf()
                 counter_checks++;
-            }*/  
+            }
+            #endif
+            memcpy(broker_address, broker_ip, strlen(broker_ip));
 
-            printf("Connecting to MQTT broker IP:'%s'...\n", MQTT_CLIENT_BROKER_IP_ADDR);   //broker_address
+            printf("Connecting to MQTT broker IP:'%s'...\n", broker_address);   //broker_address
 
-            status = mqtt_connect(&conn, MQTT_CLIENT_BROKER_IP_ADDR, DEFAULT_BROKER_PORT, (DEFAULT_PUBLISH_INTERVAL * 3 )/ CLOCK_SECOND, MQTT_CLEAN_SESSION_ON);
+            status = mqtt_connect(&conn, broker_address, DEFAULT_BROKER_PORT, (DEFAULT_PUBLISH_INTERVAL * 3 )/ CLOCK_SECOND, MQTT_CLEAN_SESSION_ON);
             
             if(status == MQTT_STATUS_OK){
                 printf("[mqtt_connect]: connected successfully!\n");

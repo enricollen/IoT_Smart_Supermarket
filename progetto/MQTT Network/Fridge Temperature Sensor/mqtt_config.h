@@ -1,4 +1,4 @@
-#define MQTT_CLIENT_BROKER_IP_ADDR "fd00:::::::1"
+#define MQTT_CLIENT_BROKER_IP_ADDR "fd00::1"
 //"fd00::1"
 #define DEFAULT_BROKER_PORT         1883
 #define DEFAULT_PUBLISH_INTERVAL    (30 * CLOCK_SECOND)
@@ -10,6 +10,7 @@
 
 
 static const char *broker_ip = MQTT_CLIENT_BROKER_IP_ADDR;  //"fd00:::::::1";
+const uint8_t broker_ip_len = 8;//strlen(MQTT_CLIENT_BROKER_IP_ADDR) + 1;
 
 //-----------------------------------
 static short state;
