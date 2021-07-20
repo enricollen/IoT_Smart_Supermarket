@@ -295,16 +295,16 @@ PROCESS_THREAD(mqtt_client_process, ev, data)
 						   (DEFAULT_PUBLISH_INTERVAL * 3) / CLOCK_SECOND,
 						   MQTT_CLEAN_SESSION_ON);
         if(status == MQTT_STATUS_OK){
-            printf("[mqtt_connect]: connected successfully!\n");
+            LOG_INFO("[mqtt_connect]: connected successfully!\n");
             state = STATE_CONNECTING;
 
         }else{
-            printf("[mqtt_connect]: an error occurred :(\n");
+            LOG_DBG("[mqtt_connect]: an error occurred :(\n");
             if(status == MQTT_STATUS_ERROR){
-                printf("[mqtt_connect]: status == MQTT_STATUS_ERROR\n");
-                printf("[mqtt_connect] using IP broker_address = '%s' | broker_ip = '%s'\n", broker_address, broker_ip);
+                LOG_DBG("[mqtt_connect]: status == MQTT_STATUS_ERROR\n");
+                LOG_DBG("[mqtt_connect] using IP broker_address = '%s' | broker_ip = '%s'\n", broker_address, broker_ip);
             }else{
-                printf("[mqtt_connect] ERROR NUMBER: %d \n", (int) status);
+                LOG_DBG("[mqtt_connect] ERROR NUMBER: %d \n", (int) status);
             }
             
         }
