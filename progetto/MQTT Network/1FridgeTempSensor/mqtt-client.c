@@ -66,7 +66,6 @@ static char client_id[BUFFER_SIZE];
 static char pub_topic[BUFFER_SIZE];
 static char sub_topic[BUFFER_SIZE];
 
-static int value = 0;
 
 // Periodic timer to check the state of the MQTT client
 #define STATE_MACHINE_PERIODIC     (CLOCK_SECOND >> 1)
@@ -84,8 +83,70 @@ static struct mqtt_message *msg_ptr = 0;
 
 static struct mqtt_connection conn;
 
+static int period = 0;
+
 /*---------------------------------------------------------------------------*/
 PROCESS(mqtt_client_process, "MQTT Client");
+
+
+#define HIGH_TEMP_TRESHOLD 8.0
+#define LOW_TEMP_TRESHOLD -4.0
+#define MAX_DIFF 20    //10 times maximum diff
+
+float current_temperature = 2.5;
+
+enum DOOR_STATE {OPEN, CLOSED};
+
+enum DOOR_STATE door_state = CLOSED;
+
+#define DEFAULT_PROBABILITY 50
+
+bool roll_dice(int probability){
+
+    if(random() % 100 <= probability){
+        return true;
+    }
+    else
+        return false;
+}
+
+bool door_is_open(){
+
+    int open_probability = 10;
+
+    if(door_state == OPEN){
+        //still open probability is higher than normal open probability
+        open_probability = 80;
+    }
+
+    if(roll_dice(open_probability)){
+        door_state = OPEN;
+    }else{
+        door_state = CLOSED;
+    }
+
+    if(door_state == OPEN)
+        return true;
+    else
+        return false;
+}
+
+void sense_temperature(){
+
+    if(door_is_open()){
+
+        current_temperature += 1.0;
+
+    }else{
+        float diff = ((float)(random() % MAX_DIFF)) / 10.0;
+
+        if(roll_dice(DEFAULT_PROBABILITY)){
+            diff *= -1.0;
+        }
+
+        current_temperature += diff;
+    }
+}
 
 
 
@@ -110,7 +171,8 @@ mqtt_event(struct mqtt_connection *m, mqtt_event_t event, void *data)
 {
   switch(event) {
   case MQTT_EVENT_CONNECTED: {
-    printf("Application has a MQTT connection\n");
+    
+    printf("[+] Connected to MQTT broker!\n");
 
     state = STATE_CONNECTED;
     break;
@@ -208,20 +270,44 @@ PROCESS_THREAD(mqtt_client_process, ev, data)
 		  
 		  if(state == STATE_NET_OK){
 			  // Connect to MQTT server
-			  printf("Connecting!\n");
+			  printf("Connecting to MQTT broker...\n");
 			  
 			  memcpy(broker_address, broker_ip, strlen(broker_ip)); 
 			  
 			  mqtt_connect(&conn, broker_address, DEFAULT_BROKER_PORT,
 						   (DEFAULT_PUBLISH_INTERVAL * 3) / CLOCK_SECOND,
 						   MQTT_CLEAN_SESSION_ON);
-			  state = STATE_CONNECTING;
+
+        /*
+        status = mqtt_connect .....
+        if(status == MQTT_STATUS_OK){
+            printf("[mqtt_connect]: connected successfully!\n");
+            state = STATE_CONNECTING;
+
+        }else{
+            printf("[mqtt_connect]: an error occurred :(\n");
+            if(status == MQTT_STATUS_ERROR){
+                printf("[mqtt_connect]: status == MQTT_STATUS_ERROR\n");
+                printf("[mqtt_connect] using IP broker_address = '%s' | broker_ip = '%s'\n", broker_address, broker_ip);
+            }else{
+                printf("[mqtt_connect] ERROR NUMBER: %d \n", (int) status);
+            }
+            
+        }*/
+
+        state = STATE_CONNECTING;
+        
 		  }
 		  
 		  if(state==STATE_CONNECTED){
 		  
+        printf("Subscribing...\n");
+
 			  // Subscribe to a topic
-			  strcpy(sub_topic,"actuator");
+			  //strcpy(sub_topic,"actuator");
+        char t[64];
+        sprintf(t, "fridge/%s/desidered_temp", client_id);
+        strcpy(sub_topic,t);
 
 			  status = mqtt_subscribe(&conn, NULL, sub_topic, MQTT_QOS_LEVEL_0);
 
@@ -232,24 +318,29 @@ PROCESS_THREAD(mqtt_client_process, ev, data)
 			  }
 			  
 			  state = STATE_SUBSCRIBED;
+
+        printf("Subscribed successfully to topic '%s'! \n", sub_topic);
 		  }
 
 			  
-		if(state == STATE_SUBSCRIBED){
-			// Publish something
-		    sprintf(pub_topic, "%s", "status");
+		if(state == STATE_SUBSCRIBED && (period%60==0)){  //publishes every 60 ticks
 			
-			sprintf(app_buffer, "report %d", value);
-			
-			value++;
-				
-			mqtt_publish(&conn, NULL, pub_topic, (uint8_t *)app_buffer,
-               strlen(app_buffer), MQTT_QOS_LEVEL_0, MQTT_RETAIN_OFF);
+        sense_temperature();
+                        
+        // Publish something
+        sprintf(pub_topic, "fridge/%s/temperature", client_id); //a different topic for each temperature sensor node
+
+        sprintf(app_buffer, "{\"temperature\": %.2f, \"timestamp\": %lu, \"unit\": \"celsius\"}", current_temperature, clock_seconds());
+        mqtt_publish(&conn, NULL, pub_topic, (uint8_t *)app_buffer,
+                strlen(app_buffer), MQTT_QOS_LEVEL_0, MQTT_RETAIN_OFF);
 		
 		} else if ( state == STATE_DISCONNECTED ){
 		   LOG_ERR("Disconnected form MQTT broker\n");	
 		   // Recover from error
+       state = STATE_INIT;
 		}
+
+    period++;
 		
 		etimer_set(&periodic_timer, STATE_MACHINE_PERIODIC);
       

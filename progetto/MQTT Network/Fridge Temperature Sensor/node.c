@@ -162,7 +162,7 @@ PROCESS_THREAD(mqtt_client_process, ev, data)
 
 /*
   char t[11];
-  sprintf(t, "fridge/%d/desidered_temp", node_id);
+  sprintf(t, "fridge/%s/desidered_temp", node_id);
   strcpy(sub_topic,t);
 */ 
 
@@ -197,7 +197,7 @@ PROCESS_THREAD(mqtt_client_process, ev, data)
                 counter_checks++;
             }
             #endif
-            memcpy(broker_address, broker_ip, strlen(broker_ip));
+            memcpy(broker_address, broker_ip, broker_ip_len);
 
             printf("Connecting to MQTT broker IP:'%s'...\n", broker_address);   //broker_address
 
