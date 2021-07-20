@@ -35,6 +35,17 @@ static const char *broker_ip = MQTT_CLIENT_BROKER_IP_ADDR;
 
 // We assume that the broker does not require authentication
 
+/*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+#define ENABLE_SENSE_TEMPERATURE false
+#define ENABLE_MQTT_PUBLISH false
+#define ENABLE_PERIODIC_PUBLISH false
+#define ENABLE_HANDLE_MQTT_CONNECT_RETURN_STATUS false
+#define ENABLE_PUBLISH_CURRENT_STATE false
+#define ENABLE_HANDLE_MQTT_CONNECT_RETURN_STATUS false
+#define ENABLE_PREPARE_MQTT_TOPIC_STRING false
+
+
+/*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 /*---------------------------------------------------------------------------*/
 /* Various states */
@@ -88,6 +99,8 @@ static int period = 0;
 /*---------------------------------------------------------------------------*/
 PROCESS(mqtt_client_process, "MQTT Client");
 
+
+#if ENABLE_SENSE_TEMPERATURE
 
 #define HIGH_TEMP_TRESHOLD 8.0
 #define LOW_TEMP_TRESHOLD -4.0
@@ -148,7 +161,7 @@ void sense_temperature(){
     }
 }
 
-
+#endif
 
 /*---------------------------------------------------------------------------*/
 static void
@@ -274,12 +287,10 @@ PROCESS_THREAD(mqtt_client_process, ev, data)
 			  
 			  memcpy(broker_address, broker_ip, strlen(broker_ip)); 
 			  
-			  mqtt_connect(&conn, broker_address, DEFAULT_BROKER_PORT,
+			  #if ENABLE_HANDLE_MQTT_CONNECT_RETURN_STATUS
+        status = mqtt_connect(&conn, broker_address, DEFAULT_BROKER_PORT,
 						   (DEFAULT_PUBLISH_INTERVAL * 3) / CLOCK_SECOND,
 						   MQTT_CLEAN_SESSION_ON);
-
-        /*
-        status = mqtt_connect .....
         if(status == MQTT_STATUS_OK){
             printf("[mqtt_connect]: connected successfully!\n");
             state = STATE_CONNECTING;
@@ -293,9 +304,15 @@ PROCESS_THREAD(mqtt_client_process, ev, data)
                 printf("[mqtt_connect] ERROR NUMBER: %d \n", (int) status);
             }
             
-        }*/
+        }
+        #else
+        mqtt_connect(&conn, broker_address, DEFAULT_BROKER_PORT,
+						   (DEFAULT_PUBLISH_INTERVAL * 3) / CLOCK_SECOND,
+						   MQTT_CLEAN_SESSION_ON);
 
         state = STATE_CONNECTING;
+
+        #endif
         
 		  }
 		  
@@ -304,10 +321,13 @@ PROCESS_THREAD(mqtt_client_process, ev, data)
         printf("Subscribing...\n");
 
 			  // Subscribe to a topic
-			  //strcpy(sub_topic,"actuator");
+			  #if ENABLE_PREPARE_MQTT_TOPIC_STRING
         char t[64];
         sprintf(t, "fridge/%s/desidered_temp", client_id);
         strcpy(sub_topic,t);
+        #else
+        strcpy(sub_topic,"actuator");
+        #endif
 
 			  status = mqtt_subscribe(&conn, NULL, sub_topic, MQTT_QOS_LEVEL_0);
 
@@ -323,16 +343,24 @@ PROCESS_THREAD(mqtt_client_process, ev, data)
 		  }
 
 			  
-		if(state == STATE_SUBSCRIBED && (period%60==0)){  //publishes every 60 ticks
+		if(state == STATE_SUBSCRIBED 
+      #if ENABLE_PERIODIC_PUBLISH
+      && (period%60==0)
+      #endif
+      ){  //publishes every 60 ticks
 			
+        #if ENABLE_SENSE_TEMPERATURE
         sense_temperature();
-                        
+        #endif
+        
+        #if ENABLE_PUBLISH_CURRENT_STATE
         // Publish something
         sprintf(pub_topic, "fridge/%s/temperature", client_id); //a different topic for each temperature sensor node
 
         sprintf(app_buffer, "{\"temperature\": %.2f, \"timestamp\": %lu, \"unit\": \"celsius\"}", current_temperature, clock_seconds());
         mqtt_publish(&conn, NULL, pub_topic, (uint8_t *)app_buffer,
                 strlen(app_buffer), MQTT_QOS_LEVEL_0, MQTT_RETAIN_OFF);
+        #endif
 		
 		} else if ( state == STATE_DISCONNECTED ){
 		   LOG_ERR("Disconnected form MQTT broker\n");	
