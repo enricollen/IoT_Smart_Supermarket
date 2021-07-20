@@ -6,3 +6,14 @@ PROGETTO SUPERMERCATO:
 - ATTUATORI:
      - modifica prezzo merce
      - allarme / luce per segnalare avaria frigorifero
+
+
+##ESEMPI DI USO COAP NETWORK:
+
+     coap-client -m post -e new_price=0.99 coap://[fd00::202:2:2:2]/price
+
+     coap-client -m get coap://[fd00::202:2:2:2]/price
+
+     note:
+          -    gli IPv6 vanno tra quadre
+          -    gli IP dei nodi sono a partire da fd00::xxxxxxxxxxx

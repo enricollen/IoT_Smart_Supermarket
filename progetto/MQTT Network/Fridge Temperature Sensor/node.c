@@ -152,7 +152,7 @@ PROCESS_THREAD(mqtt_client_process, ev, data)
 
   snprintf((char *) broker_address, CONFIG_IP_ADDR_STR_LEN, "%s", broker_ip);
 
-  int counter_checks = 0;
+  //int counter_checks = 0;
   test_function(broker_address);
 
 /*
@@ -184,14 +184,15 @@ PROCESS_THREAD(mqtt_client_process, ev, data)
 
         if(state == STATE_NET_OK){
             // Connect to MQTT broker
-            if(counter_checks < 10){
+
+            /*if(counter_checks < 10){
                 check_broker_ip_string(broker_address);
                 counter_checks++;
-            }   
+            }*/  
 
-            printf("Connecting to MQTT broker IP:'%s'...\n", broker_address);
+            printf("Connecting to MQTT broker IP:'%s'...\n", MQTT_CLIENT_BROKER_IP_ADDR);   //broker_address
 
-            status = mqtt_connect(&conn, broker_address, DEFAULT_BROKER_PORT, (DEFAULT_PUBLISH_INTERVAL * 3 )/ CLOCK_SECOND, MQTT_CLEAN_SESSION_ON);
+            status = mqtt_connect(&conn, MQTT_CLIENT_BROKER_IP_ADDR, DEFAULT_BROKER_PORT, (DEFAULT_PUBLISH_INTERVAL * 3 )/ CLOCK_SECOND, MQTT_CLEAN_SESSION_ON);
             
             if(status == MQTT_STATUS_OK){
                 printf("[mqtt_connect]: connected successfully!\n");
