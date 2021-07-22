@@ -41,6 +41,9 @@ class PriceDisplay(COAPModel):
         params = (self.id, self.current_price, self.last_price_change)
         conn.cursor.execute(sql, params)
 
+    def set_new_values(self):
+        #TO DO...
+        return self
 
 """
 TABLE NAME: price_display_state

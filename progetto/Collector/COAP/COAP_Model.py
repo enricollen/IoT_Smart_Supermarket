@@ -34,7 +34,8 @@ class COAPModel:
     @abstractmethod #not sure if it should be abstract or not
     def observe_handler(self):
         #TO DO:
-        #in some ways receives current node state, update object state and stores it in the database
+        #in some ways receives current node state whenever it updates its state and notifies the subscribers,
+        #we then have to update object state and store it in the database
         pass
 
     #@abstractmethod
