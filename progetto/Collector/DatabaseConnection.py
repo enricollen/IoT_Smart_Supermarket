@@ -24,8 +24,10 @@ class DatabaseConnection:
                 print("Database does not exist")
             else:
                 print(err)
-        #else:
-        #self.cursor = self.dbConn.cursor()
-        #self.dbConn.close()
+        else:
+            self.cursor = self.dbConn.cursor()
+        
+    def __del__(self):
+        self.dbConn.close()
 
 

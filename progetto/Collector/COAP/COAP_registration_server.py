@@ -28,12 +28,15 @@ class RegistrationResource(Resource):
         #if the node is already registered, we should properly handle the request
         (node_ip, node_port) = request.source   #request.source should contain a tuple (ip, port)
 
-        #we assume that the payload contains only a string indicating the kind of node
+        if node_ip in collector.connected_ip_list():
+            #we should anwer with 200 already connected
 
         options = {
            "PriceDisplay" : collector.register_new_price_display,
            "WeightSensor" : collector.register_new_weight_sensor
         }
+
+        #we assume that the payload contains only a string indicating the kind of node
         if request.payload in options:  #searches over the keys
             options[request.payload](node_ip)   #instantiates the nodes' model
             #should send ACK 200 response
