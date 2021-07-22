@@ -111,8 +111,9 @@ PROCESS(mqtt_client_process, "MQTT Client");
 #define THERMOSTAT_DELTA 2
 #define INERTIAL_DELTA THERMOSTAT_DELTA+1
 
+enum binary_state {OFF, ON};
 
-bool compressor_state = false;
+enum binary_state compressor_state = OFF;
 
 float desired_temperature = 0.0;
 
@@ -170,7 +171,7 @@ void sense_temperature(){
         current_temperature += diff;
         */
        if(current_temperature > desired_temperature){
-         compressor_state = true;
+         compressor_state = ON;
          if(current_temperature > desired_temperature + INERTIAL_DELTA){
            current_temperature -= 0.1;
          }
@@ -180,9 +181,9 @@ void sense_temperature(){
        }
        else{
          if(current_temperature + THERMOSTAT_DELTA < desired_temperature){
-           compressor_state = false;
+           compressor_state = OFF;
          }
-         if(compressor_state==true){
+         if(compressor_state==ON){
            current_temperature -= 0.1;
          }
          else{
