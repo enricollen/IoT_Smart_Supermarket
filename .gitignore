@@ -1,3 +1,9 @@
 build/
 *.cooja
 progetto/MQTT Network/Border Router/border-router.cooja
+progetto/Collector/logging.conf
+progetto/Collector/__pycache__/Collector.cpython-38.pyc
+progetto/Collector/__pycache__/DatabaseConnection.cpython-38.pyc
+progetto/Collector/__pycache__/DatabaseConnection.cpython-38.pyc
+*.pyc
+__pycache__/

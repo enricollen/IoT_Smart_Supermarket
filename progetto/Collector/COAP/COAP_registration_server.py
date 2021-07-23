@@ -3,6 +3,7 @@
 from typing import Collection
 from coapthon.server.coap import CoAP
 
+from coapthon import defines
 from coapthon.resources.resource import Resource
 
 from Collector import collector
@@ -10,6 +11,7 @@ from Collector import collector
 REGISTRATION_SUCCESSFULL = "Registration Successfull"
 ALREADY_REGISTERED = "Already Registered"
 WRONG_PAYLOAD = "Invalid Sensor Type"
+INTERNAL_ERROR = "Internal error while handling the request"
 
 class RegistrationResource(Resource):
 
@@ -25,29 +27,42 @@ class RegistrationResource(Resource):
         self.payload = "Hello"
         return self
 
-    def render_POST(self, request):
-        #TO DO:
+    def render_POST_advanced(self, request, response):  #render_POST(self, request):
+    
         #here we have to handle the registration requests from the nodes
         #we should obtain the kind of node and call the proper class constructor
         #if the node is already registered, we should properly handle the request
+
+        from coapthon.messages.response import Response
+        assert(isinstance(response, Response))
+
         (node_ip, node_port) = request.source   #request.source should contain a tuple (ip, port)
 
         if node_ip in collector.connected_ip_list():
+            response.payload = ALREADY_REGISTERED
+            response.code = defines.Codes.PRECONDITION_FAILED.number
             #we should anwer with 200 already connected
-
-        options = {
-           "PriceDisplay" : collector.register_new_price_display,
-           "ShelfScale" : collector.register_new_shelf_scale_device
-        }
-
-        #we assume that the payload contains only a string indicating the kind of node
-        if request.payload in options:  #searches over the keys
-            options[request.payload](node_ip)   #instantiates the nodes' model
-            #should send ACK 200 response
         else:
-            #wrong payload -> we should answer with error 400 (bad request)
+            options = {
+            "PriceDisplay" : collector.register_new_price_display,
+            "ShelfScale" : collector.register_new_scale_device
+            }
 
-        return self
+            #we assume that the payload contains only a string indicating the kind of node
+            if request.payload in options:  #searches over the keys
+                success = options[request.payload](node_ip)   #instantiates the nodes' model
+                if( success == False):
+                    response.payload = INTERNAL_ERROR
+                    response.code = defines.Codes.INTERNAL_SERVER_ERROR.number
+                else:
+                    response.payload = REGISTRATION_SUCCESSFULL    #should send ACK 200 response
+
+            else:
+                response.payload = WRONG_PAYLOAD
+                response.code = defines.Codes.BAD_REQUEST.number
+                #wrong payload -> we should answer with error 400 (bad request)
+
+        return self, response
 
 class CoAPServer(CoAP):
     def __init__(self, host, port):
