@@ -5,6 +5,10 @@
 #include "coap-engine.h"
 #include "sys/etimer.h"
 #include <time.h>
+#define SENSOR_TYPE "ShelfScale"
+const char* node_name = "Weight&Refill Sensors and CoAP Server";
+#include "network_config.h"
+
 
 /* Log configuration */
 #include "sys/log.h"
@@ -15,8 +19,6 @@
 #define MAX_WEIGHT 2000
 #define MIN_WEIGHT 0
 #define TRESHOLD_WEIGHT 200
-
-const char* node_name = "Weight&Refill Sensors and CoAP Server";
 
 
 /* Declare and auto-start this file's process */
@@ -61,13 +63,22 @@ PROCESS_THREAD(contiki_ng_br_coap_server, ev, data){
   PROCESS_BEGIN();
   etimer_set(&timer, 5*CLOCK_SECOND);
 
-	coap_activate_resource(&res_weight, "weight");
-  coap_activate_resource(&res_refill, "refill");
-
   refill_shelf();   //when the sensor is restarted, we reset the current weight to MAX_WEIGHT
 
+	coap_activate_resource(&res_weight, "weight");
+  coap_activate_resource(&res_refill, "refill");
+  
+  wait_connectivity();
+
+  if(!initialize_node_id())
+    LOG_ERR("[%.*s]: Unable to initialize Node ID", node_name);
+
   LOG_DBG("[%.*s]: up and running", node_name);
-	
+
+  register_to_collector();
+
+  LOG_DBG("[%.*s]: Registration to Collector succeded", node_name);
+  
   while(1){
     PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&timer));
     measure_weight();

@@ -15,7 +15,10 @@ static struct etimer wait_registration;
 static bool registered = false;
 static char* service_url = "/register";
 static coap_endpoint_t server_ep;
-static coap_message_t request[1]; /* This way the packet can be treated as pointer as usual. */	
+static coap_message_t request[1]; /* This way the packet can be treated as pointer as usual. */
+
+#define CLIENT_ID_SIZE 6
+char node_id[CLIENT_ID_SIZE];
 
 static bool have_connectivity(void)
 {
@@ -33,6 +36,15 @@ void wait_connectivity(){
         etimer_reset(&wait_connectivity);
     }
     LOG_DBG("[%.*s]: Successfully connected to network");
+}
+
+bool initialize_node_id(){
+    if(!have_connectivity())
+      return false;
+    
+    snprintf(node_id, CLIENT_ID_SIZE, "%02x%02x%02x", 
+          linkaddr_node_addr.u8[5], linkaddr_node_addr.u8[6], linkaddr_node_addr.u8[7]);
+    return true;
 }
 
 void client_chunk_handler(coap_message_t *response)
@@ -75,3 +87,4 @@ void register_to_collector(){
         PROCESS_WAIT_UNTIL(etimer_expired(&wait_registration));
   }
 }
+

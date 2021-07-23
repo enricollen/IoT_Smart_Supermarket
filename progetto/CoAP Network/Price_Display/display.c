@@ -5,14 +5,14 @@
 #include "coap-engine.h"
 #include "sys/etimer.h"
 #include <time.h>
+#define SENSOR_TYPE "PriceDisplay"
 const char* node_name = "Price Display and CoAP Server";
-#include "network_config.h"
+#include "../network_config.h"
 
 /* Log configuration */
 #include "sys/log.h"
 #define LOG_MODULE "App"
 #define LOG_LEVEL LOG_LEVEL_APP
-#define SENSOR_TYPE "PriceDisplay"
 
 #define DEFAULT_PRICE 20.5
 #define MINIMUM_PRICE 0.90
@@ -59,6 +59,9 @@ PROCESS_THREAD(contiki_ng_br_coap_server, ev, data){
 	coap_activate_resource(&res_price, "price");
 
   wait_connectivity();
+
+  if(!initialize_node_id())
+    LOG_ERR("[%.*s]: Unable to initialize Node ID", node_name);
 
   LOG_DBG("[%.*s]: up and running", node_name);
 

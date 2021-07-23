@@ -31,7 +31,7 @@ static void
 res_get_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
 	coap_set_header_content_format(response, APPLICATION_JSON);
-	snprintf((char *)buffer, COAP_MAX_CHUNK_SIZE, "{\"price\": %.2f, \"current_ts\": %lu, \"last_change_ts\": %lu}", current_price, clock_seconds(), last_price_change);
+	snprintf((char *)buffer, COAP_MAX_CHUNK_SIZE, "{\"price\":%.2f,\"now\":%lu,\"last_chg\":%lu,\"id\":%d}", current_price, clock_seconds(), last_price_change, node_id);
     coap_set_payload(response, (uint8_t *)buffer, strlen((char *)buffer));
 }
 
