@@ -7,6 +7,10 @@ from coapthon.resources.resource import Resource
 
 from Collector import collector
 
+REGISTRATION_SUCCESSFULL = "Registration Successfull"
+ALREADY_REGISTERED = "Already Registered"
+WRONG_PAYLOAD = "Invalid Sensor Type"
+
 class RegistrationResource(Resource):
 
     def __init__(self, name="RegistrationResource", coap_server=None):
@@ -33,7 +37,7 @@ class RegistrationResource(Resource):
 
         options = {
            "PriceDisplay" : collector.register_new_price_display,
-           "WeightSensor" : collector.register_new_weight_sensor
+           "ShelfScale" : collector.register_new_shelf_scale_device
         }
 
         #we assume that the payload contains only a string indicating the kind of node

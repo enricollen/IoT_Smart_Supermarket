@@ -5,16 +5,17 @@
 #include "coap-engine.h"
 #include "sys/etimer.h"
 #include <time.h>
+const char* node_name = "Price Display and CoAP Server";
+#include "network_config.h"
 
 /* Log configuration */
 #include "sys/log.h"
 #define LOG_MODULE "App"
 #define LOG_LEVEL LOG_LEVEL_APP
+#define SENSOR_TYPE "PriceDisplay"
 
 #define DEFAULT_PRICE 20.5
 #define MINIMUM_PRICE 0.90
-
-const char* node_name = "Price Display and CoAP Server";
 
 /* Declare and auto-start this file's process */
 PROCESS(contiki_ng_br_coap_server, "[Price Display and CoAP Server]: exposed resources: '/price'");
@@ -27,6 +28,7 @@ extern coap_resource_t res_price;
 //those are initialized inside PROCESS_THREAD
 float current_price = 0;
 long last_price_change = -1; 
+int node_id = -1;
 //------------------------------
 
 void change_price(float updated_price){
@@ -52,11 +54,17 @@ PROCESS_THREAD(contiki_ng_br_coap_server, ev, data){
 
   PROCESS_BEGIN();
 
+  change_price(DEFAULT_PRICE);   //when the sensor is restarted, we reset the current price to DEFAULT PRICE
+
 	coap_activate_resource(&res_price, "price");
 
-  change_price(DEFAULT_PRICE);   //when the sensor is restarted, we reset the current weight to DEFAULT PRICE
+  wait_connectivity();
 
   LOG_DBG("[%.*s]: up and running", node_name);
+
+  register_to_collector();
+
+  LOG_DBG("[%.*s]: Registration to Collector succeded", node_name);
 		
   PROCESS_END();
 }
