@@ -12,8 +12,6 @@ logger.setLevel(level=logging.DEBUG)
 PRICE_DISPLAY = "price_display"
 SHELF_SCALE = "shelf_scale"
 
-#TO DO:
-#this class should be static
 class Collector:
     price_display_array = [] #array of PriceDisplays
     shelf_scale_device_array = [] # [ScaleDevice1, ScaleDevice2...]

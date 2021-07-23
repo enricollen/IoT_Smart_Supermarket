@@ -1,3 +1,4 @@
+#include "contiki.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -5,6 +6,15 @@
 #include "coap-engine.h"
 #include "sys/etimer.h"
 #include <time.h>
+
+
+#include "node-id.h"
+#include "net/ipv6/simple-udp.h"
+#include "net/ipv6/uip.h"
+#include "net/ipv6/uip-ds6.h"
+#include "net/ipv6/uip-debug.h"
+#include "routing/routing.h"
+
 #define SENSOR_TYPE "PriceDisplay"
 const char* node_name = "Price Display and CoAP Server";
 #include "../network_config.h"
@@ -28,7 +38,6 @@ extern coap_resource_t res_price;
 //those are initialized inside PROCESS_THREAD
 float current_price = 0;
 long last_price_change = -1; 
-int node_id = -1;
 //------------------------------
 
 void change_price(float updated_price){

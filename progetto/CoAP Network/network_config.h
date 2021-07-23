@@ -10,7 +10,7 @@
 #define ALREADY_REGISTERED "Already Registered"
 #define WRONG_PAYLOAD "Invalid Sensor Type"
 
-static struct etimer wait_connectivity;
+static struct etimer wait_connectivity_timer;
 static struct etimer wait_registration;
 static bool registered = false;
 static char* service_url = "/register";
@@ -18,7 +18,7 @@ static coap_endpoint_t server_ep;
 static coap_message_t request[1]; /* This way the packet can be treated as pointer as usual. */
 
 #define CLIENT_ID_SIZE 6
-char node_id[CLIENT_ID_SIZE];
+char sensor_id[CLIENT_ID_SIZE];
 
 static bool have_connectivity(void)
 {
@@ -30,10 +30,10 @@ static bool have_connectivity(void)
 }
 
 void wait_connectivity(){
-    etimer_set(&wait_connectivity, CLOCK_SECOND* CONNECTION_TRY_INTERVAL);
+    etimer_set(&wait_connectivity_timer, CLOCK_SECOND* CONNECTION_TRY_INTERVAL);
     while(!have_connectivity()){
-        PROCESS_WAIT_UNTIL(etimer_expired(&wait_connectivity));
-        etimer_reset(&wait_connectivity);
+        PROCESS_WAIT_UNTIL(etimer_expired(&wait_connectivity_timer));
+        etimer_reset(&wait_connectivity_timer);
     }
     LOG_DBG("[%.*s]: Successfully connected to network");
 }
@@ -42,7 +42,7 @@ bool initialize_node_id(){
     if(!have_connectivity())
       return false;
     
-    snprintf(node_id, CLIENT_ID_SIZE, "%02x%02x%02x", 
+    snprintf(sensor_id, CLIENT_ID_SIZE, "%02x%02x%02x", 
           linkaddr_node_addr.u8[5], linkaddr_node_addr.u8[6], linkaddr_node_addr.u8[7]);
     return true;
 }
