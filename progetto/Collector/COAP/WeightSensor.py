@@ -12,11 +12,12 @@ DEFAULT_WEIGHT = 2000
 class WeightSensor(COAPModel):
     
     current_weight = DEFAULT_WEIGHT
+    
 
-    def __init__(self):
+    def __init__(self, ip_addr):
         self.resource_path = WEIGHT_RESOURCE_PATH
         self.is_observable = IS_OBSERVABLE
-        super().__init__()
+        super().__init__(ip_addr)
 
     def update_state_from_json(self, json):
         try:
@@ -33,15 +34,12 @@ class WeightSensor(COAPModel):
         params = (self.id, self.current_price)
         conn.cursor.execute(sql, params)
 
-    def set_new_values(self):
-        #TO DO...
-        return self
 
 """
 TABLE NAME: weight_sensor_state
 
 +----------+----------+---------------+
-|   ID     |  now()   | curent_weight | 
+|   ID     |  now()   | current_weight | 
 +----------+----------+---------------+
 
 """
