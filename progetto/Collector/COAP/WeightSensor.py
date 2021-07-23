@@ -1,5 +1,7 @@
-from COAPModel import COAPModel
+from COAP.COAP_Model import COAPModel
 import logging
+logger = logging.getLogger("COAPModule")
+
 from DatabaseConnection import DatabaseConnection
 
 WEIGHT_RESOURCE_PATH = "weight"
@@ -23,7 +25,7 @@ class WeightSensor(COAPModel):
         try:
             self.current_weight = json[WEIGHT_KEY]
         except:
-            logging.warning("unable to parse state from json")
+            logger.warning("unable to parse state from json")
             return False
 
         return self

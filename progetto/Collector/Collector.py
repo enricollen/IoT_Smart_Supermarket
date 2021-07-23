@@ -1,5 +1,13 @@
-from PriceDisplay import PriceDisplay
-from ScaleDevice import ScaleDevice
+from COAP.PriceDisplay import PriceDisplay
+from COAP.ScaleDevice import ScaleDevice
+
+import logging
+
+default_logger = logging.getLogger()
+default_logger.setLevel(level=logging.CRITICAL)
+
+logger = logging.getLogger("COAPModule")
+logger.setLevel(level=logging.DEBUG)
 
 PRICE_DISPLAY = "price_display"
 SHELF_SCALE = "shelf_scale"
@@ -24,7 +32,8 @@ class Collector:
 
         try:
             price_display = PriceDisplay(ip_addr)
-        except:
+        except Exception as e:
+            logger.warning(e)
             return False
 
         self.register_new_COAP_device(self, ip_addr, PRICE_DISPLAY)
@@ -32,14 +41,15 @@ class Collector:
         self.price_display_array.append(price_display)
 
         #logic for binding a weight sensor with correspondent price display
-        bind_price_and_scale(ip_addr_price_display=ip_addr) 
+        self.bind_price_and_scale(ip_addr_price_display=ip_addr) 
 
         return self
 
     def register_new_scale_device(self, ip_addr):
         try:
             scale_device = ScaleDevice(ip_addr)
-        except:
+        except Exception as e:
+            logger.warning(e)
             return False
 
         self.register_new_COAP_device(self, ip_addr, SHELF_SCALE)
@@ -47,7 +57,7 @@ class Collector:
         self.shelf_scale_device_array.append(scale_device)
 
         #logic for binding a weight sensor with correspondent price display
-        bind_price_and_scale(ip_addr_scale_device=ip_addr) 
+        self.bind_price_and_scale(ip_addr_scale_device=ip_addr) 
 
         return self
 
@@ -57,20 +67,20 @@ class Collector:
 
     def bind_price_and_scale(self, ip_addr_price_display="", ip_addr_scale_device=""):
         if ip_addr_price_display!="": #we want to bind price display with a spare scale device
-            if len(spare_scale_devices)==0:
-                spare_price_displays.append(ip_addr_price_display)
+            if len(self.spare_scale_devices)==0:
+                self.spare_price_displays.append(ip_addr_price_display)
                 return
             else:
-                ip_addr_scale_device = spare_scale_devices.pop()
-                coupled_scale_and_price.append([ip_addr_scale_device, ip_addr_price_display])
+                ip_addr_scale_device = self.spare_scale_devices.pop()
+                self.coupled_scale_and_price.append([ip_addr_scale_device, ip_addr_price_display])
 
         if ip_addr_scale_device!="": #we want to bind scale device with a spare price display
-            if len(spare_price_displays)==0:
-                spare_scale_devices.append(ip_addr_scale_device)
+            if len(self.spare_price_displays)==0:
+                self.spare_scale_devices.append(ip_addr_scale_device)
                 return
             else:
-                ip_addr_price_display = spare_price_displays.pop()
-                coupled_scale_and_price.append([ip_addr_scale_device, ip_addr_price_display])
+                ip_addr_price_display = self.spare_price_displays.pop()
+                self.coupled_scale_and_price.append([ip_addr_scale_device, ip_addr_price_display])
 
 
 collector = Collector()

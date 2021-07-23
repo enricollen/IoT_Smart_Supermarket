@@ -1,5 +1,8 @@
-import WeightSensor
-import RefillSensor
+from COAP.WeightSensor import WeightSensor
+from COAP.RefillSensor import RefillSensor
+
+import logging
+logger = logging.getLogger("COAPModule")
 
 class ScaleDevice:
     
@@ -15,7 +18,7 @@ class ScaleDevice:
     
     def bind_price_display(self, price_display_ip):
         if(self.linked_price_display!=""):
-            logging.warning("[ScaleDevice: bind_scale_device] Scale Device has already been associated with Price Display")
+            logger.warning("[ScaleDevice: bind_scale_device] Scale Device has already been associated with Price Display")
             return False
 
         self.linked_price_display = price_display_ip

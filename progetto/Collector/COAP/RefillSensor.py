@@ -1,4 +1,4 @@
-from COAPModel import COAPModel
+from COAP.COAP_Model import COAPModel
 import logging
 from DatabaseConnection import DatabaseConnection
 

@@ -1,13 +1,16 @@
-from COAPModel import COAPModel
+from COAP.COAP_Model import COAPModel
 import logging
 from DatabaseConnection import DatabaseConnection
 #from datetime import datetime
+
+logger = logging.getLogger("COAPModule")
 
 PRICE_RESOURCE_PATH = "price"
 IS_OBSERVABLE = True
 
 PRICE_KEY = "price"
 LAST_CHANGE_TS_KEY = "last_change_ts"
+NODE_ID_KEY = "id"
 
 DEFAULT_PRICE = 10.0
 
@@ -27,8 +30,9 @@ class PriceDisplay(COAPModel):
         try:
             self.current_price = json[PRICE_KEY]
             self.last_price_change = json[LAST_CHANGE_TS_KEY]
+            self.id = json[NODE_ID_KEY]
         except:
-            logging.warning("unable to parse state from json")
+            logger.warning("unable to parse state from json")
             return False
 
         #self.last_update = datetime.now()
@@ -47,7 +51,7 @@ class PriceDisplay(COAPModel):
     
     def bind_scale_device(self, scale_ip):
         if(self.linked_scale_device!=""):
-            logging.warning("[PriceDisplay: bind_scale_device] Price Display has already been associated with Scale Sensor")
+            logger.warning("[PriceDisplay: bind_scale_device] Price Display has already been associated with Scale Sensor")
             return False
 
         self.linked_scale_device = scale_ip
