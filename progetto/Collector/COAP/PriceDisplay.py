@@ -15,13 +15,13 @@ class PriceDisplay(COAPModel):
     
     current_price = DEFAULT_PRICE
     last_price_change = -1
+    linked_scale_device = ""
 
-    #last_update = 0
 
-    def __init__(self):
+    def __init__(self, ip_addr):
         self.resource_path = PRICE_RESOURCE_PATH
         self.is_observable = IS_OBSERVABLE
-        super().__init__()
+        super().__init__(ip_addr)
 
     def update_state_from_json(self, json):
         try:
@@ -44,6 +44,13 @@ class PriceDisplay(COAPModel):
     def set_new_values(self):
         #TO DO...
         return self
+    
+    def bind_scale_device(self, scale_ip):
+        if(self.linked_scale_device!=""):
+            logging.warning("[PriceDisplay: bind_scale_device] Price Display has already been associated with Scale Sensor")
+            return False
+
+        self.linked_scale_device = scale_ip
 
 """
 TABLE NAME: price_display_state

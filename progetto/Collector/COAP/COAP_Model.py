@@ -15,9 +15,9 @@ class COAPModel:
     resource_path = ""
     is_observable = False
 
-    def __init__(self, ip_address, resource_path):
+    def __init__(self, ip_address):
         self.ip_address = ip_address
-        self.resource_path = resource_path
+        #self.resource_path = resource_path
         self.get_current_state()
         if(self.is_observable()):
             self.start_observing(self.observe_handler)
