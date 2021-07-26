@@ -26,7 +26,10 @@ class DatabaseConnection:
                 print(err)
         else:
             self.cursor = self.dbConn.cursor()
-        
+
+    #NOTE:
+    # when you make a query remember to call self.dbCursor.commit() to store changes!    
+    
     def __del__(self):
         self.dbConn.close()
 
