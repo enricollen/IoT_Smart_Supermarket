@@ -15,7 +15,7 @@ DEFAULT_COAP_PORT = 5683
 class COAPModel:
     ip_address = ""
     resource_path = ""
-    is_observable = False
+    observable = False
 
     def __init__(self, ip_address):
         self.ip_address = ip_address
@@ -26,11 +26,11 @@ class COAPModel:
             raise Exception("[COAPModel]: unable to instantiate the object | ip: " + str(self.ip_address))
 
 
-        if(self.is_observable()):
+        if(self.observable == True):
             self.start_observing(self.observe_handler)
 
     def is_observable(self):
-        return self.is_observable
+        return self.observable == True
 
     @abstractmethod #not sure if it should be abstract or not
     def start_observing(self, observe_handler):

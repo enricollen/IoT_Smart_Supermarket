@@ -26,7 +26,7 @@ class PriceDisplay(COAPModel):
 
     def __init__(self, ip_addr):
         self.resource_path = PRICE_RESOURCE_PATH
-        self.is_observable = IS_OBSERVABLE
+        self.observable = IS_OBSERVABLE
         super().__init__(ip_addr)
 
     def update_state_from_json(self, json):
