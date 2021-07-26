@@ -54,6 +54,24 @@ uint16_t sender_port, const uip_ipaddr_t *receiver_addr, uint16_t receiver_port,
 PROCESS(contiki_ng_br, "Contiki-NG Border Router");
 AUTOSTART_PROCESSES(&contiki_ng_br);
 
+
+
+#include "net/ipv6/simple-udp.h"
+#include "net/ipv6/uip.h"
+#include "net/ipv6/uip-ds6.h"
+#include "net/ipv6/uip-debug.h"
+#define CONNECTION_TRY_INTERVAL 1
+static struct etimer wait_connectivity_timer;
+
+static bool have_connectivity(void)
+{
+  if(uip_ds6_get_global(ADDR_PREFERRED) == NULL ||
+     uip_ds6_defrt_choose() == NULL) {
+    return false;
+  }
+  return true;
+}
+
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(contiki_ng_br, ev, data)
 {
@@ -63,6 +81,14 @@ PROCESS_THREAD(contiki_ng_br, ev, data)
   PROCESS_NAME(webserver_nogui_process);
   process_start(&webserver_nogui_process, NULL);
 #endif /* BORDER_ROUTER_CONF_WEBSERVER */
+
+	
+	etimer_set(&wait_connectivity_timer, CLOCK_SECOND * CONNECTION_TRY_INTERVAL);
+    while(!have_connectivity()){
+        PROCESS_WAIT_UNTIL(etimer_expired(&wait_connectivity_timer));
+        etimer_reset(&wait_connectivity_timer);
+    }
+	
 
 	//inizializzazione DAG
 	NETSTACK_ROUTING.root_start();
