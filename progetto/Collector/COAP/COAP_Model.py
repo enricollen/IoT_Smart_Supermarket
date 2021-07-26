@@ -100,4 +100,14 @@ class COAPModel:
     def save_current_state(self):
         pass
 
+    def delete(self):#method to call when you want to close the server
+        
+        if self.observer_client:
+            self.observer_client.close()
+
+    def __del__(self):  #class disruptor
+        #self.observer_client.cancel_observing()
+        if self.observer_client:
+            self.observer_client.close()
+
     

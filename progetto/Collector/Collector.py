@@ -1,11 +1,11 @@
 from COAP.PriceDisplay import PriceDisplay
 from COAP.ScaleDevice import ScaleDevice
 
-import logging
+import traceback
 
+import logging
 default_logger = logging.getLogger()
 default_logger.setLevel(level=logging.CRITICAL)
-
 logger = logging.getLogger("COAPModule")
 logger.setLevel(level=logging.DEBUG)
 
@@ -21,6 +21,7 @@ class Collector:
 
     def register_new_COAP_device(self, ip_addr, kind):
         self.devices[ip_addr] = kind
+        logger.debug("[register_new_COAP_device] ip: " + ip_addr + "| kind: " + kind)
         return self
     
     def connected_ip_list(self):
@@ -31,10 +32,11 @@ class Collector:
         try:
             price_display = PriceDisplay(ip_addr)
         except Exception as e:
-            logger.warning(e)
+            logger.critical("[Collector->register_new_price_display] exception: " + str(e))
+            traceback.print_exc()
             return False
 
-        self.register_new_COAP_device(self, ip_addr, PRICE_DISPLAY)
+        self.register_new_COAP_device(ip_addr, PRICE_DISPLAY)
 
         self.price_display_array.append(price_display)
 
@@ -80,5 +82,16 @@ class Collector:
                 ip_addr_price_display = self.spare_price_displays.pop()
                 self.coupled_scale_and_price.append([ip_addr_scale_device, ip_addr_price_display])
 
+    def close(self):
+        while 1:
+            if len(self.price_display_array):
+                el = self.price_display_array.pop()
+                el.delete()
+                
+            elif len(self.shelf_scale_device_array):
+                el = self.shelf_scale_device_array.pop()
+                el.delete()
+            else:
+                break
 
 collector = Collector()
