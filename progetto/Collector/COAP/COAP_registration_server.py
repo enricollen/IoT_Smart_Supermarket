@@ -6,6 +6,10 @@ from coapthon.server.coap import CoAP
 from coapthon import defines
 from coapthon.resources.resource import Resource
 
+import logging
+logger = logging.getLogger("COAP_registration_server")
+logger.setLevel(level=logging.DEBUG)
+
 from Collector import collector
 
 REGISTRATION_SUCCESSFULL = "Registration Successfull"
@@ -53,6 +57,8 @@ class RegistrationResource(Resource):
                 success = options[request.payload](node_ip)   #instantiates the nodes' model
                 if( success == False):
                     response.payload = INTERNAL_ERROR
+                    logger.debug("INTERNAL_ERROR: request.payload = " + str(request.payload))
+
                     response.code = defines.Codes.INTERNAL_SERVER_ERROR.number
                 else:
                     response.payload = REGISTRATION_SUCCESSFULL    #should send ACK 200 response
@@ -61,7 +67,7 @@ class RegistrationResource(Resource):
                 response.payload = WRONG_PAYLOAD
                 response.code = defines.Codes.BAD_REQUEST.number
                 #wrong payload -> we should answer with error 400 (bad request)
-
+        logger.info("[registration_server]: just handled registration request from " + str(node_ip) + " | response_sent = " + response.payload)
         return self, response
 
 class CoAPServer(CoAP):

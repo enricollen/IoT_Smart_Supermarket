@@ -10,7 +10,7 @@ PRICE_RESOURCE_PATH = "price"
 IS_OBSERVABLE = True
 
 PRICE_KEY = "price"
-LAST_CHANGE_TS_KEY = "last_change_ts"
+LAST_CHANGE_TS_KEY = "last_chg"
 NODE_ID_KEY = "id"
 NOW_KEY = "now"
 
@@ -52,6 +52,7 @@ class PriceDisplay(COAPModel):
         sql = "INSERT INTO price_display_state(node_id, timestamp, current_price, last_price_change) VALUES(%s, NOW(), %s, %s)"
         params = (self.id, self.current_price, self.last_price_change)
         conn.cursor.execute(sql, params)
+        conn.dbConn.commit()
 
     def set_new_values(self):
         #TO DO...
