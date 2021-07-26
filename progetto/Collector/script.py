@@ -7,7 +7,7 @@
 #we have to bind the COAP models to the registrations of each kind of node
 from COAP.COAP_registration_server import CoAPServer
 
-COAP_SERVER_IP = "0.0.0.0"
+COAP_SERVER_IP = "::"
 COAP_SERVER_PORT = 5683
 
 
