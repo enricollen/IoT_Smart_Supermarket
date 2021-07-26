@@ -45,29 +45,36 @@ class COAPModel:
         #we then have to update object state and store it in the database
         pass
 
-    #@abstractmethod
+    def parse_state_response(self, response):
+
+        if(response == None):
+                return -1   #this happen when you call the delete method
+
+        if(response.payload == None):
+                logger.warning("[COAPmodel.parse_state_response]: empty response from node " + str(self.ip_address))
+                return False
+
+        try:
+            json_parsed = json.loads(response.payload)
+        except:
+            logger.warning("[COAPmodel.parse_state_response]: unable to parse JSON from " + str(self.ip_address) + " | trew on response.payload= " + str( response.payload ) )
+            return False
+
+        ret = self.update_state_from_json(json_parsed)
+        if ret:
+            self.save_current_state()
+            logger.info("[COAP_Model->parse_state_response]: just updated node state | received_state = " + str(response.payload))
+            return self
+        else:
+            return False
+
     def get_current_state(self):
         client = HelperClient(server=(self.ip_address, DEFAULT_COAP_PORT))
         response = client.get(self.resource_path)
         client.stop()
         #here we have to do something with the response
 
-        if(response.payload == None):
-                logger.warning("[COAPmodel.get_current_state]: empty response from node " + str(self.ip_address))
-                return False
-
-        try:
-            json_parsed = json.loads(response.payload)
-        except:
-            logger.warning("[COAPmodel.get_current_state]: unable to parse JSON from " + str(self.ip_address) + " | trew on response.payload= " + str( response.payload ) )
-            return False
-
-        ret = self.update_state_from_json(json_parsed)
-        if ret:
-            self.save_current_state()
-            return self
-        else:
-            return False
+        return self.parse_state_response(response)
 
 
     @abstractmethod
