@@ -5,7 +5,7 @@
 
 /* Log configuration */
 #include "sys/log.h"
-#define LOG_MODULE "App"
+#define LOG_MODULE "PriceDisplay/price"
 #define LOG_LEVEL LOG_LEVEL_APP
 
 //maybe it is better to create a globals.h file for those things
@@ -13,10 +13,15 @@ extern long last_price_change;
 extern float current_price;
 extern void change_price(float updated_price);
 extern bool check_price_validity(float price);
+
+extern char sensor_id[];
+
+coap_resource_t res_price;
 //--------------------------------------------------------------
 
 static void res_post_put_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
 static void res_get_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void price_obs_handler(void);
 
 EVENT_RESOURCE(res_price,
 		"title=\"price handler\";",
@@ -24,14 +29,14 @@ EVENT_RESOURCE(res_price,
 		res_post_put_handler,
 		res_post_put_handler,
 		NULL,
-		NULL);
+		price_obs_handler);
 
 
 static void
 res_get_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
 	coap_set_header_content_format(response, APPLICATION_JSON);
-	snprintf((char *)buffer, COAP_MAX_CHUNK_SIZE, "{\"price\":%.2f,\"now\":%lu,\"last_chg\":%lu,\"id\":%d}", current_price, clock_seconds(), last_price_change, node_id);
+	snprintf((char *)buffer, COAP_MAX_CHUNK_SIZE, "{\"price\":%.2f,\"now\":%lu,\"last_chg\":%lu,\"id\":\"sciao\"}", current_price, clock_seconds(), last_price_change);	//TODO:, sensor_id
     coap_set_payload(response, (uint8_t *)buffer, strlen((char *)buffer));
 }
 
@@ -84,4 +89,12 @@ static void res_post_put_handler(coap_message_t *request, coap_message_t *respon
 	snprintf((char *)buffer, COAP_MAX_CHUNK_SIZE, "{\"price_updated\": true, \"last_change_ts\": %lu}", last_price_change);
 	coap_set_payload(response, (uint8_t *)buffer, strlen((char *)buffer));
 
+}
+
+static void price_obs_handler(void)
+{
+	// Notify all the observers
+	// Before sending the notification the handler associated with the GET methods is called
+	//chiama la get qui
+	coap_notify_observers(&res_price);
 }
