@@ -92,7 +92,7 @@ PROCESS_THREAD(contiki_ng_br_coap_server, ev, data){
   while(!registered){
 		
 		coap_endpoint_parse(SERVER_EP, strlen(SERVER_EP), &server_ep);	
-
+    
 		coap_init_message(request, COAP_TYPE_CON, COAP_POST, 0);
 		coap_set_header_uri_path(request, service_url);
 			
