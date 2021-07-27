@@ -6,7 +6,7 @@ import datetime
 
 logger = logging.getLogger("COAPModule")
 
-from COAP.const import PRICE_DISPLAY
+from COAP.const import BLUE_STYLE, PRICE_DISPLAY, NO_CHANGE
 
 PRICE_RESOURCE_PATH = "price"
 IS_OBSERVABLE = True
@@ -36,7 +36,15 @@ class PriceDisplay(COAPModel):
         super().__init__(ip_addr)
 
     def update_state_from_json(self, json):
+        no_change = False
         try:
+
+            if self.current_price == json[PRICE_KEY] and \
+                    self.node_ts_in_seconds == json[NOW_KEY] and \
+                    self.last_price_change_in_seconds == json[LAST_CHANGE_TS_KEY] and \
+                    self.id == json[NODE_ID_KEY]:
+                no_change = True
+
             self.current_price = json[PRICE_KEY]
             self.node_ts_in_seconds = json[NOW_KEY]
             self.last_price_change_in_seconds = json[LAST_CHANGE_TS_KEY]
@@ -50,8 +58,10 @@ class PriceDisplay(COAPModel):
         else:
             self.last_price_change = None   #TO DO: check if it is dangerous for the insert in db
         #self.last_update = datetime.now()
-
-        return self
+        if no_change:
+            return NO_CHANGE
+        else:
+            return self
 
     def save_current_state(self):
         conn = DatabaseConnection()

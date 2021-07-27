@@ -8,6 +8,7 @@ import logging
 logger = logging.getLogger("COAPModule")
 #logging.config(level=logging.DEBUG)
 
+from COAP.const import NO_CHANGE, DEFAULT_STYLE, YELLOW_STYLE
 DEFAULT_COAP_PORT = 5683
 
 #classe astratta con alcuni metodi da implementare
@@ -16,7 +17,9 @@ class COAPModel:
     ip_address = ""
     resource_path = ""
     observable = False
-
+    observer_client = None
+    name_style = YELLOW_STYLE
+    
     def __init__(self, ip_address):
         self.ip_address = ip_address
         #self.resource_path = resource_path
@@ -71,9 +74,12 @@ class COAPModel:
             return False
 
         ret = self.update_state_from_json(json_parsed)
-        if ret:
+        if ret == NO_CHANGE:
+            logger.info("[" + self.ip_address +"]["+ self.class_style(self.__class__.__name__ + ".parse_state_response") + "]: no change")
+            return self
+        elif ret:
             self.save_current_state()
-            logger.info("[COAP_Model->parse_state_response]: just updated node state | received_state = " + str(response.payload))
+            logger.info("[" + self.ip_address +"]["+ self.class_style(self.__class__.__name__ + ".parse_state_response") + "]: new node state set: " + str(response.payload))
             return self
         else:
             return False
@@ -82,8 +88,6 @@ class COAPModel:
         client = HelperClient(server=(self.ip_address, DEFAULT_COAP_PORT))
         response = client.get(self.resource_path)
         client.stop()
-        #here we have to do something with the response
-
         return self.parse_state_response(response)
 
 
@@ -109,4 +113,6 @@ class COAPModel:
         if self.observer_client:
             self.observer_client.close()
 
-    
+    #---------------------------------------------
+    def class_style(self, string):
+        return self.name_style + string + DEFAULT_STYLE
