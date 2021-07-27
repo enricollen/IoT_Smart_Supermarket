@@ -29,6 +29,7 @@ class WeightSensor(COAPModel):
     def update_state_from_json(self, json):
         try:
             self.current_weight = json[WEIGHT_KEY]
+            self.id = json[ID_KEY]
         except:
             logger.warning("unable to parse state from json")
             return False
@@ -38,8 +39,9 @@ class WeightSensor(COAPModel):
     def save_current_state(self):
         conn = DatabaseConnection()
         sql = "INSERT INTO weight_sensor_state(node_id, timestamp, current_weight) VALUES(%s, NOW(), %s)"
-        params = (self.id, self.current_price)
+        params = (self.id, self.current_weight)
         conn.cursor.execute(sql, params)
+        conn.dbConn.commit()
 
 
 """
