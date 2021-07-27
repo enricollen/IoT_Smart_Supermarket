@@ -19,6 +19,8 @@ NOW_KEY = "now"
 DEFAULT_PRICE = 10.0
 PRICE_NEVER_CHANGED = -1
 
+NAME_STYLE = BLUE_STYLE
+
 class PriceDisplay(COAPModel):
     
     current_price = DEFAULT_PRICE
@@ -30,6 +32,7 @@ class PriceDisplay(COAPModel):
     def __init__(self, ip_addr):
         self.resource_path = PRICE_RESOURCE_PATH
         self.observable = IS_OBSERVABLE
+        self.name_style = NAME_STYLE
         super().__init__(ip_addr)
 
     def update_state_from_json(self, json):

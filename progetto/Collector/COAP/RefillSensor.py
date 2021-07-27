@@ -6,6 +6,12 @@ REFILL_RESOURCE_PATH = "refill"
 IS_OBSERVABLE = True
 
 LAST_REFILL_JSON_KEY = "last_refill_ts"
+ID_KEY = "id"
+NOW_KEY = "now"
+
+from COAP.const import CYAN_STYLE
+
+NAME_STYLE = CYAN_STYLE
 
 class RefillSensor(COAPModel):
     
@@ -14,11 +20,14 @@ class RefillSensor(COAPModel):
     def __init__(self, ip_addr):
         self.resource_path = REFILL_RESOURCE_PATH
         self.observable = IS_OBSERVABLE
+        self.name_style = NAME_STYLE
         super().__init__(ip_addr)
 
     def update_state_from_json(self, json):
         try:
-            self.last_refill = json[LAST_REFILL_JSON_KEY]
+            self.last_refill_in_seconds = json[LAST_REFILL_JSON_KEY]
+            self.id = json[ID_KEY]
+            self.node_ts_in_seconds = json[NOW_KEY]
         except:
             logging.warning("unable to parse state from json")
             return False

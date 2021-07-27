@@ -7,10 +7,11 @@ from coapthon import defines
 from coapthon.resources.resource import Resource
 
 import logging
-logger = logging.getLogger("COAP_registration_server")
+logger = logging.getLogger("COAPserver")
 logger.setLevel(level=logging.DEBUG)
 
 from Collector import collector
+from COAP.const import italic, bold
 
 REGISTRATION_SUCCESSFULL = "Registration Successfull"
 ALREADY_REGISTERED = "Already Registered"
@@ -67,7 +68,7 @@ class RegistrationResource(Resource):
                 response.payload = WRONG_PAYLOAD
                 response.code = defines.Codes.BAD_REQUEST.number
                 #wrong payload -> we should answer with error 400 (bad request)
-        logger.info("[registration_server]: just handled registration request from " + str(node_ip) + " | response_sent = " + response.payload)
+        logger.info("["+ bold("registration_server") + "]: registration request from [" +bold( str(node_ip) ) + "] | outcome: " + italic(response.payload))
         return self, response
 
 class CoAPServer(CoAP):
