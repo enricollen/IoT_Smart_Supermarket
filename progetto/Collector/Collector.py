@@ -20,6 +20,17 @@ class Collector:
     
     devices = {}    #key: ip | value: bounded_object
 
+    def __init__(self):
+        #TO DO:
+        #a dedicated thread (or more than one) that checks the connection to each COAP node, 
+        # in case that it is not reachable, it deletes it from devices using a proper method
+            #each COAP obj should have a field 'last_connection' containing the timestamp of the last successful connection
+            #the thread should check that now() - last_connection is under a certain value, in case it is not, it should try to make a request to the node
+            #if it does not receives a response, it should delete it
+        #
+        #Talking by the node-side, it should have a connection_status variable, indicating whether it is connected to the internet and if it is connected to the collector
+        return
+
     def register_new_COAP_device(self, ip_addr, obj, kind):
         self.devices[ip_addr] = obj
         logger.debug("[register_new_COAP_device] ip: " + ip_addr + "| kind: " + kind)
@@ -53,7 +64,7 @@ class Collector:
             logger.warning(e)
             return False
 
-        self.register_new_COAP_device(self, ip_addr, scale_device, SHELF_SCALE)
+        self.register_new_COAP_device(ip_addr, scale_device, SHELF_SCALE)
 
         self.shelf_scale_device_array.append(scale_device)
 
