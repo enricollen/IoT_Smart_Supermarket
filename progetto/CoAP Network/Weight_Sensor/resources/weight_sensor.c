@@ -9,6 +9,7 @@
 #define LOG_LEVEL LOG_LEVEL_APP
 
 extern long current_weight;
+extern char sensor_id[];
 
 //static void res_post_put_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
 static void res_get_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
@@ -27,7 +28,7 @@ static void
 res_get_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
 	coap_set_header_content_format(response, APPLICATION_JSON);
-	snprintf((char *)buffer, COAP_MAX_CHUNK_SIZE, "{\"weight\": %ld, \"timestamp\": %lu, \"unit\": \"gram\"}", current_weight, clock_seconds());
+	snprintf((char *)buffer, COAP_MAX_CHUNK_SIZE, "{\"weight\": %ld, \"timestamp\": %lu, \"id\": \"%s\"}", current_weight, clock_seconds(), sensor_id);
     coap_set_payload(response, (uint8_t *)buffer, strlen((char *)buffer));
 }
 

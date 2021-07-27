@@ -8,6 +8,8 @@
 #define LOG_MODULE "App"
 #define LOG_LEVEL LOG_LEVEL_APP
 
+extern char sensor_id[];
+
 extern long last_refill_ts;
 extern void refill_shelf();
 
@@ -28,7 +30,7 @@ static void
 res_get_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
 	coap_set_header_content_format(response, APPLICATION_JSON);
-	snprintf((char *)buffer, COAP_MAX_CHUNK_SIZE, "{\"current_ts\": %lu, \"last_refill_ts\": %lu, \"unit\": \"seconds\"}", clock_seconds(), last_refill_ts);
+	snprintf((char *)buffer, COAP_MAX_CHUNK_SIZE, "{\"now\": %lu, \"last_refill_ts\": %lu, \"id\": \"%s\"}", clock_seconds(), last_refill_ts, sensor_id);
     coap_set_payload(response, (uint8_t *)buffer, strlen((char *)buffer));
 }
 
