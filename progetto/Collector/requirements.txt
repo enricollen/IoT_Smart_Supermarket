@@ -1,0 +1,2 @@
+mysql-connector-python>=8.0.26
+CoAPthon3>=1.0.1
