@@ -28,5 +28,12 @@ class ScaleDevice:
         self.linked_price_display = price_display_ip
 
     def delete(self):
-        self.weight_sensor.delete()
-        self.refill_sensor.delete()
+        if isinstance(self.weight_sensor, WeightSensor):
+            self.weight_sensor.delete()
+            del self.weight_sensor
+        if isinstance(self.refill_sensor, RefillSensor):
+            self.refill_sensor.delete()
+            del self.refill_sensor
+
+    def __del__(self):
+        self.delete()
