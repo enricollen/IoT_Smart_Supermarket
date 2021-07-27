@@ -28,9 +28,10 @@ try:
     print("Starting smart SuperMarket Collector")
     server.listen(10)
 except KeyboardInterrupt:
-    print("Server Shutdown")
+    print("\nServer Shutdown")
     server.close()
+    #I think that the cause for the program to not closing is that some COAP_Models do observe certain topic and they keep some COAPthon clients opened
     collector.close()
     print("Exiting...")
     exit()
-    #I think that the cause for the program to not closing is that some COAP_Models do observe certain topic and they keep some COAPthon clients opened
+    

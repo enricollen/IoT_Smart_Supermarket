@@ -3,24 +3,25 @@ from COAP.ScaleDevice import ScaleDevice
 
 import traceback
 
+from COAP.const import *
+
 import logging
 default_logger = logging.getLogger()
 default_logger.setLevel(level=logging.CRITICAL)
 logger = logging.getLogger("COAPModule")
 logger.setLevel(level=logging.DEBUG)
 
-PRICE_DISPLAY = "price_display"
-SHELF_SCALE = "shelf_scale"
+
 
 class Collector:
     price_display_array = [] #array of PriceDisplays
     shelf_scale_device_array = [] # [ScaleDevice1, ScaleDevice2...]
     coupled_scale_and_price = [] # [[Scale1, Price1], [Scale2, Price2], ...]
     
-    devices = {}    #key: ip | value: kind_of_device
+    devices = {}    #key: ip | value: bounded_object
 
-    def register_new_COAP_device(self, ip_addr, kind):
-        self.devices[ip_addr] = kind
+    def register_new_COAP_device(self, ip_addr, obj, kind):
+        self.devices[ip_addr] = obj
         logger.debug("[register_new_COAP_device] ip: " + ip_addr + "| kind: " + kind)
         return self
     
@@ -36,7 +37,7 @@ class Collector:
             traceback.print_exc()
             return False
 
-        self.register_new_COAP_device(ip_addr, PRICE_DISPLAY)
+        self.register_new_COAP_device(ip_addr, price_display, PRICE_DISPLAY)
 
         self.price_display_array.append(price_display)
 
@@ -52,7 +53,7 @@ class Collector:
             logger.warning(e)
             return False
 
-        self.register_new_COAP_device(self, ip_addr, SHELF_SCALE)
+        self.register_new_COAP_device(self, ip_addr, scale_device, SHELF_SCALE)
 
         self.shelf_scale_device_array.append(scale_device)
 
@@ -83,7 +84,7 @@ class Collector:
                 self.coupled_scale_and_price.append([ip_addr_scale_device, ip_addr_price_display])
 
     def close(self):
-        while 1:
+        """while 1:
             if len(self.price_display_array):
                 el = self.price_display_array.pop()
                 el.delete()
@@ -92,6 +93,10 @@ class Collector:
                 el = self.shelf_scale_device_array.pop()
                 el.delete()
             else:
-                break
-
+                break"""
+        for ip, obj in self.devices.items():
+            #logger.info("[closing connection with]: " + obj.kind + " | ip: " + ip)
+            obj.delete()
+            del obj
+            
 collector = Collector()

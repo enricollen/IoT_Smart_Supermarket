@@ -6,6 +6,8 @@ import datetime
 
 logger = logging.getLogger("COAPModule")
 
+from COAP.const import PRICE_DISPLAY
+
 PRICE_RESOURCE_PATH = "price"
 IS_OBSERVABLE = True
 
@@ -23,6 +25,7 @@ class PriceDisplay(COAPModel):
     last_price_change = -1
     linked_scale_device = ""
 
+    kind = PRICE_DISPLAY
 
     def __init__(self, ip_addr):
         self.resource_path = PRICE_RESOURCE_PATH
