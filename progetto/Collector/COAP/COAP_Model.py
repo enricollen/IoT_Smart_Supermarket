@@ -25,17 +25,16 @@ class COAPModel:
             #we have to throw an exception
             raise Exception("[COAPModel]: unable to instantiate the object | ip: " + str(self.ip_address))
 
-
         if(self.observable == True):
-            self.start_observing(self.observe_handler)
+            self.start_observing()
+
 
     def is_observable(self):
         return self.observable == True
 
     #@abstractmethod #not sure if it should be abstract or not
     #REFERENCE: https://github.com/Tanganelli/CoAPthon/blob/6db71de6fef365e428308adcbc59e477922ee688/coapclient.py#L28
-    def start_observing(self, observe_handler):
-        #TO DO:
+    def start_observing(self):
         #implement COAPthon method to register as observer and bind observe_handler to handle notifies
         logger.debug("[start_observing]: begin")
         self.observer_client = HelperClient(server=(self.ip_address, DEFAULT_COAP_PORT))
@@ -48,8 +47,8 @@ class COAPModel:
         #TO DO:
         #in some ways receives current node state whenever it updates its state and notifies the subscribers,
         #we then have to update object state and store it in the database
-        
-        if self.parse_state_response(response) == False:
+        ret = self.parse_state_response(response)
+        if ret == False:
             logger.error("[observe_handler] unable to parse state for ip : " + str(self.ip_address))
 
         #method to stop observing: self.observer_client.cancel_observing(response, True)  #True if you want to send RST message, else False
