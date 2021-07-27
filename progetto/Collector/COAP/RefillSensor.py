@@ -11,7 +11,7 @@ LAST_REFILL_JSON_KEY = "last_refill_ts"
 ID_KEY = "id"
 NOW_KEY = "now"
 
-from COAP.const import CYAN_STYLE
+from COAP.const import CYAN_STYLE, NO_CHANGE
 
 NAME_STYLE = CYAN_STYLE
 
@@ -26,7 +26,13 @@ class RefillSensor(COAPModel):
         super().__init__(ip_addr)
 
     def update_state_from_json(self, json):
+        no_change = False
         try:
+            if (self.last_refill_in_seconds == json[LAST_REFILL_JSON_KEY] and \
+                self.id == json[ID_KEY] and \
+                self.node_ts_in_seconds == json[NOW_KEY]):
+                    no_change = True
+
             self.last_refill_in_seconds = json[LAST_REFILL_JSON_KEY]
             self.id = json[ID_KEY]
             self.node_ts_in_seconds = json[NOW_KEY]
@@ -36,7 +42,10 @@ class RefillSensor(COAPModel):
         
         last_refill_offset = self.node_ts_in_seconds - self.last_refill_in_seconds
         self.last_refill = datetime.datetime.now() - datetime.timedelta(seconds=last_refill_offset)
-        return self
+        if no_change:
+            return NO_CHANGE
+        else:
+            return self
 
     def save_current_state(self):
         conn = DatabaseConnection()

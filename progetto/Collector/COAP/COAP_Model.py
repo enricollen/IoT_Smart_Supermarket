@@ -8,7 +8,7 @@ import logging
 logger = logging.getLogger("COAPModule")
 #logging.config(level=logging.DEBUG)
 
-from COAP.const import NO_CHANGE, DEFAULT_STYLE, YELLOW_STYLE
+from COAP.const import NO_CHANGE, DEFAULT_STYLE, YELLOW_STYLE, bold
 DEFAULT_COAP_PORT = 5683
 
 #classe astratta con alcuni metodi da implementare
@@ -79,7 +79,7 @@ class COAPModel:
             return self
         elif ret:
             self.save_current_state()
-            logger.info("[" + self.ip_address +"]["+ self.class_style(self.__class__.__name__ + ".parse_state_response") + "]: new node state set: " + str(response.payload))
+            logger.info("[" + self.ip_address +"]["+ self.class_style(self.__class__.__name__ + ".parse_state_response") + "]: new node state set: " + bold( str(response.payload) ) )
             return self
         else:
             return False

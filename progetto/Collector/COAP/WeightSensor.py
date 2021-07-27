@@ -9,8 +9,9 @@ IS_OBSERVABLE = True
 
 WEIGHT_KEY = "weight"
 ID_KEY = "id"
+NOW_KEY = "now"
 
-from COAP.const import GREEN_STYLE
+from COAP.const import GREEN_STYLE, NO_CHANGE
 NAME_STYLE = GREEN_STYLE
 
 DEFAULT_WEIGHT = 2000
@@ -27,14 +28,22 @@ class WeightSensor(COAPModel):
         super().__init__(ip_addr)
 
     def update_state_from_json(self, json):
+        no_change = False
         try:
+            if(elf.current_weight == json[WEIGHT_KEY] and
+            self.id == json[ID_KEY] and
+            self.now_in_seconds == json[NOW_KEY]):
+                no_change = True
             self.current_weight = json[WEIGHT_KEY]
             self.id = json[ID_KEY]
+            self.now_in_seconds = json[NOW_KEY]
         except:
             logger.warning("unable to parse state from json")
             return False
-
-        return self
+        if no_change:
+            return NO_CHANGE
+        else:
+            return self
 
     def save_current_state(self):
         conn = DatabaseConnection()

@@ -28,7 +28,7 @@ static void
 res_get_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
 	coap_set_header_content_format(response, APPLICATION_JSON);
-	snprintf((char *)buffer, COAP_MAX_CHUNK_SIZE, "{\"weight\": %ld, \"timestamp\": %lu, \"id\": \"%s\"}", current_weight, clock_seconds(), sensor_id);
+	snprintf((char *)buffer, COAP_MAX_CHUNK_SIZE, "{\"weight\": %ld, \"now\": %lu, \"id\": \"%s\"}", current_weight, clock_seconds(), sensor_id);
     coap_set_payload(response, (uint8_t *)buffer, strlen((char *)buffer));
 }
 
