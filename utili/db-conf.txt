@@ -1,0 +1,10 @@
+-- comandi da eseguire dentro mysql come admin:
+
+CREATE USER 'paciollen';
+CREATE DATABASE smart_supermarket;
+GRANT ALL PRIVILEGES ON smart_supermarket.* TO paciollen;
+
+
+-- pacchetto da installare per connessione python3 <-> mysql:
+    pip3 install mysql-connector-python
+    
