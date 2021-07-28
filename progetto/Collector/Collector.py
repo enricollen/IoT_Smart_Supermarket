@@ -1,7 +1,10 @@
+import traceback
+
 from COAP.PriceDisplay import PriceDisplay
 from COAP.ScaleDevice import ScaleDevice
 
-import traceback
+from MQTT.FridgeTempSensor import FridgeTempSensor
+
 
 from COAP.const import *
 
@@ -18,7 +21,11 @@ class Collector:
     shelf_scale_device_array = [] # [ScaleDevice1, ScaleDevice2...]
     coupled_scale_and_price = [] # [[Scale1, Price1], [Scale2, Price2], ...]
     
-    devices = {}    #key: ip | value: bounded_object
+    coap_devices = {}    #key: ip | value: bounded_object
+
+    fridge_temp_sensor_array = [] # [FridgeTempSensor1, FridgeTempSensor2, ...] 
+
+    mqtt_devices = {}   #key: node_id | value: bounded_object
 
     def __init__(self):
         #TO DO:
@@ -32,12 +39,12 @@ class Collector:
         return
 
     def register_new_COAP_device(self, ip_addr, obj, kind):
-        self.devices[ip_addr] = obj
+        self.coap_devices[ip_addr] = obj
         logger.debug("[register_new_COAP_device] ip: " + ip_addr + "| kind: " + kind)
         return self
     
     def connected_ip_list(self):
-        return list( self.devices.keys() )
+        return list( self.coap_devices.keys() )
 
     def register_new_price_display(self, ip_addr):
 
@@ -95,6 +102,36 @@ class Collector:
                 ip_addr_price_display = self.spare_price_displays.pop()
                 self.coupled_scale_and_price.append([ip_addr_scale_device, ip_addr_price_display])
 
+#---------------------------------------------------------------------------------------------
+
+    def register_new_mqtt_device(self, node_id, obj, kind):
+        self.mqtt_devices[node_id] = obj
+        logger.debug("[register_new_MQTT_device] node_id: " + node_id + "| kind: " + kind)
+        return self
+
+    def connected_node_id_list(self):
+        return list( self.mqtt_devices.keys() )
+
+    def register_new_fridge_temp_sensor(self, node_id):
+        #we should check that this sensor is not present yet
+        if node_id in self.connected_node_id_list():
+            return ALREADY_REGISTERED
+        
+        try:
+            fridge_temp_sensor = FridgeTempSensor(node_id)
+        except Exception as e:
+            logger.critical("[Collector->register_new_fridge_temp_sensor] exception: " + str(e))
+            traceback.print_exc()
+            return False
+
+        self.register_new_mqtt_device(node_id, fridge_temp_sensor, FRIDGE_TEMPERATURE_SENSOR)
+
+        self.fridge_temp_sensor_array.append(fridge_temp_sensor)
+
+        return self
+
+#---------------------------------------------------------------------------------------------
+
     def close(self):
         """while 1:
             if len(self.price_display_array):
@@ -106,7 +143,7 @@ class Collector:
                 el.delete()
             else:
                 break"""
-        for ip, obj in self.devices.items():
+        for ip, obj in self.coap_devices.items():
             #logger.info("[closing connection with]: " + obj.kind + " | ip: " + ip)
             obj.delete()
             del obj

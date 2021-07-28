@@ -11,13 +11,7 @@ logger = logging.getLogger("COAPserver")
 logger.setLevel(level=logging.DEBUG)
 
 from Collector import collector
-from COAP.const import italic, bold
-
-REGISTRATION_SUCCESSFULL = "Registration Successfull"
-ALREADY_REGISTERED = "Already Registered"
-NOT_REGISTERED = "Not registered"
-WRONG_PAYLOAD = "Invalid Sensor Type"
-INTERNAL_ERROR = "Internal error while handling the request"
+from COAP.const import italic, bold, ALREADY_REGISTERED, REGISTRATION_SUCCESSFULL, NOT_REGISTERED, INTERNAL_ERROR, WRONG_PAYLOAD
 
 class RegistrationResource(Resource):
 

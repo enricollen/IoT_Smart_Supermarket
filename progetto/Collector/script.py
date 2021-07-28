@@ -13,6 +13,8 @@ COAP_SERVER_PORT = 5683
 
 from COAP.const import blue
 
+from MQTT.MqttClient import MqttClient
+
 def boot_logo():
     print( blue ("""
         d8888b.  .d8b.   .o88b. d888888b  .d88b.  db      db      d88888b d8b   db
@@ -25,6 +27,13 @@ def boot_logo():
 
 server = CoAPServer(COAP_SERVER_IP, COAP_SERVER_PORT)
 
+#mqtt_client = MqttClient(sub_topics="discovery")  #sub_topics=["fridge/temperature", "fridge/alarm"]
+"""
+in "discovery" we receive a message:
+    id   = 434334
+    kind = FRIDGE_TEMPERATURE_SENSOR | ...
+depending on id and kind we start another mqttclient that subscribes to the topic of the discovered node
+"""
 try:
     boot_logo()
     print("Starting smart SuperMarket Collector")
@@ -34,6 +43,8 @@ except KeyboardInterrupt:
     server.close()
     #I think that the cause for the program to not closing is that some COAP_Models do observe certain topic and they keep some COAPthon clients opened
     collector.close()
+
+    #mqtt_client.close()
     print("Exiting...")
     exit()
     
