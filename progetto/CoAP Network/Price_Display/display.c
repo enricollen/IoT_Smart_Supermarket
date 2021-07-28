@@ -28,6 +28,7 @@ const char* node_name = "Price Display and CoAP Server";
 #define DEFAULT_PRICE 20.5
 #define MINIMUM_PRICE 0.90
 
+
 /* Declare and auto-start this file's process */
 PROCESS(contiki_ng_br_coap_server, "[Price Display and CoAP Server]: exposed resources: '/price'");
 AUTOSTART_PROCESSES(&contiki_ng_br_coap_server);
@@ -71,41 +72,65 @@ PROCESS_THREAD(contiki_ng_br_coap_server, ev, data){
   //NOTE: you can call change_price only after the activation of res_price, because inside change_price there is a call to res_price.trigger();
   change_price(DEFAULT_PRICE);   //when the sensor is restarted, we reset the current price to DEFAULT PRICE
 
+  etimer_set(&status_check, CLOCK_SECOND* CHECK_STATUS_PERIOD);
+  while(true){
+      //wait_connectivity();
+      if(status == WAITING_NETWORK){
+        LOG_INFO("Waiting connectivity...\n");
+        etimer_set(&wait_connectivity_timer, CLOCK_SECOND* CONNECTION_TRY_INTERVAL);
+          while(!have_connectivity()){
+              PROCESS_WAIT_UNTIL(etimer_expired(&wait_connectivity_timer));
+              etimer_reset(&wait_connectivity_timer);
+          }
+        LOG_DBG("[%.*s]: Successfully connected to network\n");
+        status = CONNECTED_TO_NETWORK;
+      }
+      //
+      if(status == CONNECTED_TO_NETWORK){
+          if(id_initialized == false)
+            if(!initialize_node_id())
+              LOG_ERR("[%.*s]: Unable to initialize Node ID\n", node_name);
 
-  //wait_connectivity();
-  etimer_set(&wait_connectivity_timer, CLOCK_SECOND* CONNECTION_TRY_INTERVAL);
-    while(!have_connectivity()){
-        PROCESS_WAIT_UNTIL(etimer_expired(&wait_connectivity_timer));
-        etimer_reset(&wait_connectivity_timer);
-    }
-  LOG_DBG("[%.*s]: Successfully connected to network\n");
-  //
+          LOG_INFO("[%.*s]: Connected to network\n", node_name);
+      
+          //register_to_collector();
+          LOG_INFO("Connecting to collector...\n");
+          
+          etimer_set(&wait_registration, CLOCK_SECOND* REGISTRATION_TRY_INTERVAL);
 
-  if(!initialize_node_id())
-    LOG_ERR("[%.*s]: Unable to initialize Node ID\n", node_name);
+          while(!registered){
+            
+            coap_endpoint_parse(SERVER_EP, strlen(SERVER_EP), &server_ep);	
+            
+            coap_init_message(request, COAP_TYPE_CON, COAP_POST, 0);
+            coap_set_header_uri_path(request, service_url);
+              
+            coap_set_payload(request, (uint8_t *)SENSOR_TYPE, sizeof(SENSOR_TYPE) - 1);
+            //TO DO: it will be useful to make a non blocking request and / or decrease the CoAP connection timeout
+            COAP_BLOCKING_REQUEST(&server_ep, request, client_chunk_handler);
+            
+            etimer_reset(&wait_registration);
+            PROCESS_WAIT_UNTIL(etimer_expired(&wait_registration));
+          }
+          status = CONNECTED_TO_COLLECTOR;
+          LOG_INFO("[%.*s]: Registration to Collector succeded\n", node_name);
+          //
+      }
+      if(status == CONNECTED_TO_COLLECTOR){
+          //we want to ping the collector to check the presence of this node
+          coap_endpoint_parse(SERVER_EP, strlen(SERVER_EP), &server_ep);	
+            
+          coap_init_message(request, COAP_TYPE_CON, COAP_GET, 0);
+          coap_set_header_uri_path(request, service_url);
+            
+          coap_set_payload(request, (uint8_t *)SENSOR_TYPE, sizeof(SENSOR_TYPE) - 1);
+          //TO DO: it will be useful to make a non blocking request and / or decrease the CoAP connection timeout
+          COAP_BLOCKING_REQUEST(&server_ep, request, client_status_checker);
+      }
 
-  LOG_DBG("[%.*s]: up and running\n", node_name);
-
-  //register_to_collector();
-  etimer_set(&wait_registration, CLOCK_SECOND* REGISTRATION_TRY_INTERVAL);
-
-  while(!registered){
-		
-		coap_endpoint_parse(SERVER_EP, strlen(SERVER_EP), &server_ep);	
-    
-		coap_init_message(request, COAP_TYPE_CON, COAP_POST, 0);
-		coap_set_header_uri_path(request, service_url);
-			
-		coap_set_payload(request, (uint8_t *)SENSOR_TYPE, sizeof(SENSOR_TYPE) - 1);
-    //TO DO: it will be useful to make a non blocking request and / or decrease the CoAP connection timeout
-		COAP_BLOCKING_REQUEST(&server_ep, request, client_chunk_handler);
-    
-		etimer_reset(&wait_registration);
-    PROCESS_WAIT_UNTIL(etimer_expired(&wait_registration));
+      etimer_reset(&status_check);
+      PROCESS_WAIT_UNTIL(etimer_expired(&status_check));
+      
   }
-  //
-
-  LOG_DBG("[%.*s]: Registration to Collector succeded\n", node_name);
-		
   PROCESS_END();
 }

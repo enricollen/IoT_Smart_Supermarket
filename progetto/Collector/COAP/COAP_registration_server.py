@@ -15,6 +15,7 @@ from COAP.const import italic, bold
 
 REGISTRATION_SUCCESSFULL = "Registration Successfull"
 ALREADY_REGISTERED = "Already Registered"
+NOT_REGISTERED = "Not registered"
 WRONG_PAYLOAD = "Invalid Sensor Type"
 INTERNAL_ERROR = "Internal error while handling the request"
 
@@ -28,9 +29,16 @@ class RegistrationResource(Resource):
         self.content_type = "text/plain"
         self.interface_type = "if1" #TO DO: ?
 
-    def render_GET(self, request):
-        self.payload = "Hello"
-        return self
+    def render_GET_advanced(self, request, response):
+        
+        (node_ip, node_port) = request.source   #request.source should contain a tuple (ip, port)
+        
+        if node_ip in collector.connected_ip_list():
+            response.payload = ALREADY_REGISTERED
+        else:
+            response.payload = NOT_REGISTERED
+
+        return self, response
 
     def render_POST_advanced(self, request, response):  #render_POST(self, request):
     
