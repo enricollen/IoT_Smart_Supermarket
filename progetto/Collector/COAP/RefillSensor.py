@@ -17,7 +17,10 @@ NAME_STYLE = CYAN_STYLE
 
 class RefillSensor(COAPModel):
     
-    last_refill = -1    
+    last_refill = -1
+    id = ""
+    node_ts_in_seconds = -1
+    last_refill_in_seconds = -1
 
     def __init__(self, ip_addr):
         self.resource_path = REFILL_RESOURCE_PATH

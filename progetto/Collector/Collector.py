@@ -62,6 +62,7 @@ class Collector:
             scale_device = ScaleDevice(ip_addr)
         except Exception as e:
             logger.warning(e)
+            traceback.print_exc()
             return False
 
         self.register_new_COAP_device(ip_addr, scale_device, SHELF_SCALE)

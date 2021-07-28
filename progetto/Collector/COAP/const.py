@@ -3,6 +3,11 @@ SHELF_SCALE = "shelf_scale"
 
 NO_CHANGE = "fenom"
 
+CANNOT_PARSE_JSON = "landrier"
+
+#----------------------------------------------
+
+
 DEFAULT_STYLE = "\033[0;37;40m" #white
 RED_STYLE = "\033[1;31;40m"
 GREEN_STYLE = "\033[1;32;40m"

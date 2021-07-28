@@ -8,7 +8,7 @@ import logging
 logger = logging.getLogger("COAPModule")
 #logging.config(level=logging.DEBUG)
 
-from COAP.const import NO_CHANGE, DEFAULT_STYLE, YELLOW_STYLE, bold
+from COAP.const import NO_CHANGE, DEFAULT_STYLE, YELLOW_STYLE, CANNOT_PARSE_JSON, bold
 DEFAULT_COAP_PORT = 5683
 
 #classe astratta con alcuni metodi da implementare
@@ -72,8 +72,11 @@ class COAPModel:
         except:
             logger.warning("[COAPmodel.parse_state_response]: unable to parse JSON from " + str(self.ip_address) + " | trew on response.payload= " + str( response.payload ) )
             return False
-
-        ret = self.update_state_from_json(json_parsed)
+        try:
+            ret = self.update_state_from_json(json_parsed)
+        except Exception as e:
+            logger.critical("exception during update_state_from_json | json = " + str(response.payload))
+            raise(e)
         if ret == NO_CHANGE:
             logger.info("[" + self.ip_address +"]["+ self.class_style(self.__class__.__name__ + ".parse_state_response") + "]: no change")
             return self
@@ -81,8 +84,12 @@ class COAPModel:
             self.save_current_state()
             logger.info("[" + self.ip_address +"]["+ self.class_style(self.__class__.__name__ + ".parse_state_response") + "]: new node state set: " + bold( str(response.payload) ) )
             return self
-        else:
+        elif ret == CANNOT_PARSE_JSON:
+            logger.warning("CANNOT_PARSE_JSON")
             return False
+        elif ret == False:
+            return False
+        return self
 
     def get_current_state(self):
         client = HelperClient(server=(self.ip_address, DEFAULT_COAP_PORT))
