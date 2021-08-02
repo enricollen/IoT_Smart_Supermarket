@@ -6,6 +6,8 @@ import logging
 logger = logging.getLogger("MqttClient")
 logger.setLevel(level=logging.DEBUG)
 
+from COAP.const import CYAN_STYLE, DEFAULT_STYLE
+
 BROKER_ADDRESS = "127.0.0.1"
 BROKER_PORT = 1883
 
@@ -15,6 +17,7 @@ class MqttClient:
     client = 0
     sub_topic_array = []
     DEFAULT_SUB_TOPIC = DEFAULT_SUB_TOPIC
+    name_style = CYAN_STYLE
 
     def __init__(self, sub_topics = []):    #sub_topics can be a list or a string of a single topic
 
@@ -82,3 +85,7 @@ class MqttClient:
 
     def __del__(self):
         self.close()
+
+    #---------------------------------------------
+    def class_style(self, string):
+        return self.name_style + string + DEFAULT_STYLE
