@@ -117,7 +117,7 @@ enum binary_state compressor_state = OFF;
 
 float desired_temperature = 0.0;
 
-float current_temperature = desired_temperature;
+float current_temperature = 0.0;
 
 enum DOOR_STATE {OPEN, CLOSED};
 
@@ -209,7 +209,7 @@ pub_handler(const char *topic, uint16_t topic_len, const uint8_t *chunk,
 
   if(strcmp(topic, sub_topic) == 0) {
     printf("Received Desired Temperature: %s\n", chunk);
-	  float received_temp = atof(chunk);
+	  float received_temp = atof((const char *) chunk);
     if(received_temp==0.0){
       if(chunk[0]=='0')
         update_desired_temp(received_temp);
