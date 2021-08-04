@@ -14,6 +14,10 @@ DISCOVERY_TOPIC = "discovery"
 ID_KEY = "id"
 KIND_KEY="kind"
 
+#the MQTTDiscoverer expects to read messages about new nodes connected. The expected syntax is:
+# - JSON
+# {"id": "xxxx", "kind": "yyyy"}
+
 class MQTTDiscoverer(MqttClient):
 
     def __init__(self, sub_topics = []):
@@ -27,13 +31,22 @@ class MQTTDiscoverer(MqttClient):
         options = {
         "FridgeTemperature" : collector.register_new_fridge_temp_sensor
         }
+
+        payload_str = str(msg.payload.decode("utf-8").split('\x00',1)[0])
     
         try:
-            message = json.loads(msg.payload)
+            message = json.loads(payload_str)
+        except Exception as e:
+            logger.error("Unable to parse JSON in discovery | msg = " + payload_str + " len(msg) = " + str(len(payload_str)) )
+            print(e)
+            return
+
+        try:
             node_id = message[ID_KEY]
             kind = message[KIND_KEY]
         except:
-            logger.error("Unable to parse JSON in discovery | msg = " + str(msg.payload))
+            logger.error("Could not parse required keys from received json array = " + message)
+            return
 
         if node_id in collector.connected_node_id_list():
             outcome = ALREADY_REGISTERED
@@ -42,7 +55,7 @@ class MQTTDiscoverer(MqttClient):
                 success = options[kind](node_id)   #instantiates the nodes' model
                 if( success == False):
                     outcome = INTERNAL_ERROR
-                    logger.debug("INTERNAL_ERROR: request.payload = " + str(msg.payload))
+                    logger.debug("INTERNAL_ERROR: request.payload = " + str(msg.payload.decode("utf-8")))
 
                 elif(success == ALREADY_REGISTERED):
                     outcome = ALREADY_REGISTERED
@@ -52,7 +65,7 @@ class MQTTDiscoverer(MqttClient):
                     outcome = REGISTRATION_SUCCESSFULL
 
             else:
-                logger.debug("discovered unrecognized device: " + str(msg.payload))
+                logger.debug("discovered unrecognized device: " + str(msg.payload.decode("utf-8")))
                 outcome = WRONG_PAYLOAD
                 
         logger.info("["+ bold("discoverer") + "]: registration request from [" +bold( str(node_id) ) + "] | outcome: " + italic(outcome))
