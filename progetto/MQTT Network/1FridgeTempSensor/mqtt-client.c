@@ -28,6 +28,9 @@
 /* MQTT broker address. */
 #define MQTT_CLIENT_BROKER_IP_ADDR "fd00::1"
 
+#define DISCOVERY_TOPIC "discovery"
+#define NODE_KIND "FridgeTemperature"
+
 static const char *broker_ip = MQTT_CLIENT_BROKER_IP_ADDR;
 
 // Defaukt config values
@@ -44,6 +47,7 @@ static const char *broker_ip = MQTT_CLIENT_BROKER_IP_ADDR;
 #define ENABLE_HANDLE_MQTT_CONNECT_RETURN_STATUS false
 #define ENABLE_PUBLISH_CURRENT_STATE true
 #define ENABLE_PREPARE_MQTT_TOPIC_STRING true
+#define ENABLE_PUBLISH_DISCOVERY_MESSAGE true
 /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 /*---------------------------------------------------------------------------*/
@@ -401,6 +405,15 @@ PROCESS_THREAD(mqtt_client_process, ev, data)
         sprintf(pub_topic, "fridge/%s/temperature", client_id); //a different topic for each temperature sensor node
         LOG_DBG("[Publish Topic]: %s\n", pub_topic);
         sprintf(app_buffer, "{\"temperature\": %.2f, \"timestamp\": %lu, \"unit\": \"celsius\"}", current_temperature, clock_seconds());
+        mqtt_publish(&conn, NULL, pub_topic, (uint8_t *)app_buffer,
+                strlen(app_buffer), MQTT_QOS_LEVEL_0, MQTT_RETAIN_OFF);
+        #endif
+
+        #if ENABLE_PUBLISH_DISCOVERY_MESSAGE
+        sprintf(pub_topic, "%s", DISCOVERY_TOPIC); //a different topic for each temperature sensor node
+        LOG_DBG("[Publish Topic]: %s\n", pub_topic);
+        memset(app_buffer, 0, sizeof(app_buffer));
+        sprintf(app_buffer, "{\"id\": \"%s\", \"kind\": \"%s\"}", client_id, NODE_KIND);
         mqtt_publish(&conn, NULL, pub_topic, (uint8_t *)app_buffer,
                 strlen(app_buffer), MQTT_QOS_LEVEL_0, MQTT_RETAIN_OFF);
         #endif
