@@ -18,6 +18,7 @@
 --
 -- Table structure for table `price_display_state`
 --
+USE smart_supermarket;
 
 DROP TABLE IF EXISTS `price_display_state`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;

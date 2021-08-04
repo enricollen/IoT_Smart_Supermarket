@@ -21,6 +21,8 @@ class MqttClient:
 
     def __init__(self, sub_topics = []):    #sub_topics can be a list or a string of a single topic
 
+        logger.info("Starting mqtt client " + self.__class__.__name__)
+
         if(isinstance(sub_topics, list)):
             self.sub_topic_array += sub_topics
         else:
@@ -34,6 +36,7 @@ class MqttClient:
 
         global BROKER_ADDRESS
 
+
         while(not connected):
             try:
                 self.client.connect(BROKER_ADDRESS, BROKER_PORT, 60)
@@ -43,6 +46,7 @@ class MqttClient:
                 BROKER_ADDRESS = ALTERNATIVE_BROKER
             else:
                 connected = True
+                logger.info("Connecting to broker " + BROKER_ADDRESS)
         
         self.client.loop_start()    #instantiate a thread for this MqttClient instance
 
@@ -59,7 +63,7 @@ class MqttClient:
             
             logger.debug("Subscribed to " + topics)
         else:
-            logger.debug("Subscribing to default topic")
+            logger.debug("Subscribing to default topic '" + self.DEFAULT_SUB_TOPIC +"'")
             client.subscribe(self.DEFAULT_SUB_TOPIC)
 
     @abstractmethod
@@ -80,7 +84,14 @@ class MqttClient:
 
     def close(self):
         if( isinstance(self.client, mqtt.Client)):
-            self.client.stop()
+            logger.info("Stopping mqtt.Client instance self.client")
+            try:
+                self.client.loop_stop()
+            except Exception as e:
+                logger.critical("Could not stop self.client in MqttClient")
+                print(e)
+            else:
+                del self.client
         return
 
     def __del__(self):

@@ -16,7 +16,7 @@ KIND_KEY="kind"
 
 class MQTTDiscoverer(MqttClient):
 
-    def __init__(self, sub_topics):
+    def __init__(self, sub_topics = []):
 
         self.DEFAULT_SUB_TOPIC = DISCOVERY_TOPIC
 

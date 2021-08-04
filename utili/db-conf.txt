@@ -4,6 +4,12 @@ CREATE USER 'paciollen';
 CREATE DATABASE smart_supermarket;
 GRANT ALL PRIVILEGES ON smart_supermarket.* TO paciollen;
 
+per effettuare un dump:
+    msqldump -u ... -p [databases] > DUMP_FILENAME.sql
+
+
+da terminale per ripristinare un dump:
+    mysql -u paciollen < dump2021-07-27_10-30.sql 
 
 -- pacchetto da installare per connessione python3 <-> mysql:
     pip3 install mysql-connector-python
