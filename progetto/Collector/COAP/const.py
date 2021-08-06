@@ -2,6 +2,9 @@ PRICE_DISPLAY = "price_display"
 SHELF_SCALE = "shelf_scale"
 FRIDGE_TEMPERATURE_SENSOR = "fridge_temp_sensor"
 
+KINDS_LIST = [PRICE_DISPLAY, SHELF_SCALE, FRIDGE_TEMPERATURE_SENSOR]
+
+KIND_NOT_RECOGNISED = "kind not recognised"
 NO_CHANGE = "fenom"
 
 CANNOT_PARSE_JSON = "landrier"
@@ -15,7 +18,7 @@ NOT_REGISTERED = "Not registered"
 WRONG_PAYLOAD = "Invalid Sensor Type"
 INTERNAL_ERROR = "Internal error while handling the request"
 
-
+ADDRESS_ALREADY_IN_USE = "Address already in use"
 #----------------------------------------------
 
 DEFAULT_STYLE = "\033[0;37;40m" #white

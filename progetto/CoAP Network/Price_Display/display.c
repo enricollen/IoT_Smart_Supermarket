@@ -19,7 +19,7 @@
 #define LOG_MODULE "PriceDisplay"
 #define LOG_LEVEL LOG_LEVEL_APP
 
-#define SENSOR_TYPE "PriceDisplay"
+#define SENSOR_TYPE "price_display"
 const char* node_name = "Price Display and CoAP Server";
 #include "../network_config.h"
 

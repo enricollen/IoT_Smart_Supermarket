@@ -39,7 +39,7 @@ class COAPModel:
     #REFERENCE: https://github.com/Tanganelli/CoAPthon/blob/6db71de6fef365e428308adcbc59e477922ee688/coapclient.py#L28
     def start_observing(self):
         #implement COAPthon method to register as observer and bind observe_handler to handle notifies
-        logger.debug("[start_observing]: begin")
+        #logger.debug("[start_observing]: begin")
         self.observer_client = HelperClient(server=(self.ip_address, DEFAULT_COAP_PORT))
         self.observer_client.observe(self.resource_path, self.observe_handler)
         #client.stop()  #DO NOT STOP THE OBSERVER CLIENT

@@ -2,17 +2,20 @@ import datetime
 import json
 
 from MQTT.MqttClient import MqttClient
+
+from Node import Node
+
 from DatabaseConnection import DatabaseConnection
 
 import logging
 logger = logging.getLogger("COAPModule")
 
-from COAP.const import NO_CHANGE, bold
+from COAP.const import NO_CHANGE, bold, FRIDGE_TEMPERATURE_SENSOR
 
 CURRENT_TEMP_KEY = "temperature"
 NOW_KEY = "timestamp"
 
-class FridgeTempSensor(MqttClient):
+class FridgeTempSensor(MqttClient, Node):
 
     node_id = ""
     pub_topic = ""
@@ -20,11 +23,14 @@ class FridgeTempSensor(MqttClient):
     node_ts_in_seconds = -1
     current_temp = ""
 
+    kind = FRIDGE_TEMPERATURE_SENSOR
+
     def __init__(self, node_id):
         self.node_id = node_id
         sub_topic = "fridge/" + self.node_id + "/temperature"
         self.pub_topic = "fridge/"+ self.node_id + "/desired_temp"
         super().__init__(sub_topic)
+        Node.__init__(self)
 
     def change_setpoint(self, new_setpoint):
         #TO DO:
@@ -100,5 +106,16 @@ TABLE NAME: fridge_temperatures
 +------------+----------+----------+--------------------+-------------------+
 |     ID     | node_id  |  now()   | node_ts_in_seconds |    temperature    |
 +------------+----------+----------+--------------------+-------------------+
+
+DROP TABLE IF EXISTS `fridge_temperatures`;
+
+CREATE TABLE `fridge_temperatures` (
+  `ID` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `node_id` varchar(50) NOT NULL,
+  `timestamp` timestamp NOT NULL DEFAULT current_timestamp(),
+  `node_ts_in_seconds` INT NOT NULL COMMENT 'seconds since last node restart',
+  `temperature` float NOT NULL,
+  PRIMARY KEY (`ID`)
+) ENGINE=InnoDB AUTO_INCREMENT=277 DEFAULT CHARSET=utf8mb4;
 
 """

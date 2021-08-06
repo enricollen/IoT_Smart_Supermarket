@@ -52,7 +52,7 @@ class MqttClient:
 
     # The callback for when the client receives a CONNACK response from the server.
     def on_connect(self, client, userdata, flags, rc):
-        print("Connected with result code "+str(rc))
+        logger.debug("Connected with result code " + str(rc) )
         # Subscribing in on_connect() means that if we lose the connection and
         # reconnect then subscriptions will be renewed.
         if(len(self.sub_topic_array)):

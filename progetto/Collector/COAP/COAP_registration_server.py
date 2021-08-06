@@ -11,7 +11,7 @@ logger = logging.getLogger("COAPserver")
 logger.setLevel(level=logging.DEBUG)
 
 from Collector import collector
-from COAP.const import italic, bold, ALREADY_REGISTERED, REGISTRATION_SUCCESSFULL, NOT_REGISTERED, INTERNAL_ERROR, WRONG_PAYLOAD
+from COAP.const import ADDRESS_ALREADY_IN_USE, PRICE_DISPLAY, SHELF_SCALE, italic, bold, ALREADY_REGISTERED, REGISTRATION_SUCCESSFULL, NOT_REGISTERED, INTERNAL_ERROR, WRONG_PAYLOAD
 
 class RegistrationResource(Resource):
 
@@ -44,32 +44,43 @@ class RegistrationResource(Resource):
         assert(isinstance(response, Response))
 
         (node_ip, node_port) = request.source   #request.source should contain a tuple (ip, port)
+        node_kind = request.payload
 
-        if node_ip in collector.connected_ip_list():
+        node_connection_status = collector.check_if_already_connected(node_ip = node_ip, kind = node_kind)
+
+        if node_connection_status == ALREADY_REGISTERED: #node_ip in collector.connected_ip_list():
             response.payload = ALREADY_REGISTERED
             response.code = defines.Codes.PRECONDITION_FAILED.number
             #we should anwer with 200 already connected
-        else:
+        elif node_connection_status == ADDRESS_ALREADY_IN_USE:
+            response.payload = ADDRESS_ALREADY_IN_USE
+            response.code = defines.Codes.PRECONDITION_FAILED.number
+        elif node_connection_status == NOT_REGISTERED:
             options = {
-            "PriceDisplay" : collector.register_new_price_display,
-            "ShelfScale" : collector.register_new_scale_device
+            PRICE_DISPLAY : collector.register_new_price_display,
+            SHELF_SCALE : collector.register_new_scale_device
             }
 
             #we assume that the payload contains only a string indicating the kind of node
-            if request.payload in options:  #searches over the keys
-                success = options[request.payload](node_ip)   #instantiates the nodes' model
+            if node_kind in options:  #searches over the keys
+                success = options[node_kind](node_ip)   #instantiates the nodes' model
                 if( success == False):
                     response.payload = INTERNAL_ERROR
                     logger.debug("INTERNAL_ERROR: request.payload = " + str(request.payload))
-
                     response.code = defines.Codes.INTERNAL_SERVER_ERROR.number
                 else:
                     response.payload = REGISTRATION_SUCCESSFULL    #should send ACK 200 response
 
             else:
                 response.payload = WRONG_PAYLOAD
+                logger.debug("WRONG_PAYLOAD: request.payload = " + str(request.payload))
                 response.code = defines.Codes.BAD_REQUEST.number
                 #wrong payload -> we should answer with error 400 (bad request)
+        else:
+            logger.error("check_if_already_connected returned: " + node_connection_status)
+            response.payload = INTERNAL_ERROR
+            response.code = defines.Codes.INTERNAL_SERVER_ERROR.number
+
         logger.info("["+ bold("registration_server") + "]: registration request from [" +bold( str(node_ip) ) + "] | outcome: " + italic(response.payload))
         return self, response
 

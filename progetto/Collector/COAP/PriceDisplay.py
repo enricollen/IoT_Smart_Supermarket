@@ -1,3 +1,4 @@
+from Node import Node
 from COAP.COAP_Model import COAPModel
 import logging
 from DatabaseConnection import DatabaseConnection
@@ -21,7 +22,7 @@ PRICE_NEVER_CHANGED = -1
 
 NAME_STYLE = BLUE_STYLE
 
-class PriceDisplay(COAPModel):
+class PriceDisplay(COAPModel, Node):
     
     current_price = DEFAULT_PRICE
     last_price_change = -1
@@ -34,6 +35,7 @@ class PriceDisplay(COAPModel):
         self.observable = IS_OBSERVABLE
         self.name_style = NAME_STYLE
         super().__init__(ip_addr)
+        Node.__init__(self)
 
     def update_state_from_json(self, json):
         no_change = False

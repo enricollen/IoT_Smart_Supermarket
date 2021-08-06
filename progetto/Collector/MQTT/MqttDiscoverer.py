@@ -4,7 +4,7 @@ import logging
 logger = logging.getLogger("MqttDiscoverer")
 logger.setLevel(level=logging.DEBUG)
 
-from COAP.const import bold, italic, ALREADY_REGISTERED, REGISTRATION_SUCCESSFULL, INTERNAL_ERROR, WRONG_PAYLOAD
+from COAP.const import ADDRESS_ALREADY_IN_USE, FRIDGE_TEMPERATURE_SENSOR, NOT_REGISTERED, bold, italic, ALREADY_REGISTERED, REGISTRATION_SUCCESSFULL, INTERNAL_ERROR, WRONG_PAYLOAD, KIND_NOT_RECOGNISED
 
 from MQTT.MqttClient import MqttClient
 from Collector import collector
@@ -29,7 +29,7 @@ class MQTTDiscoverer(MqttClient):
     def on_message(self, client, userdata, msg):
         
         options = {
-        "FridgeTemperature" : collector.register_new_fridge_temp_sensor
+        FRIDGE_TEMPERATURE_SENSOR : collector.register_new_fridge_temp_sensor
         }
 
         payload_str = str(msg.payload.decode("utf-8").split('\x00',1)[0])
@@ -48,9 +48,11 @@ class MQTTDiscoverer(MqttClient):
             logger.error("Could not parse required keys from received json array = " + message)
             return
 
-        if node_id in collector.connected_node_id_list():
+        node_connection_status = collector.check_if_already_connected(node_id = node_id, kind = kind, is_mqtt_connection=True)
+
+        if node_connection_status == ALREADY_REGISTERED: #node_id in collector.connected_node_id_list():
             outcome = ALREADY_REGISTERED
-        else:
+        elif node_connection_status == NOT_REGISTERED:
             if(kind in options):
                 success = options[kind](node_id)   #instantiates the nodes' model
                 if( success == False):
@@ -67,7 +69,18 @@ class MQTTDiscoverer(MqttClient):
             else:
                 logger.debug("discovered unrecognized device: " + str(msg.payload.decode("utf-8")))
                 outcome = WRONG_PAYLOAD
-                
-        logger.info("["+ bold("discoverer") + "]: registration request from [" +bold( str(node_id) ) + "] | outcome: " + italic(outcome))
+
+        elif node_connection_status == ADDRESS_ALREADY_IN_USE:
+            logger.warning("Duplicate mqtt node with same node_id!")
+            outcome = ADDRESS_ALREADY_IN_USE
+
+        elif node_connection_status:
+            outcome = node_connection_status
+
+        else:
+            outcome = INTERNAL_ERROR
+
+        if outcome != ALREADY_REGISTERED: 
+            logger.info("["+ bold("discoverer") + "]: registration request from [" +bold( str(node_id) ) + "] | outcome: " + italic(outcome))
         
         return

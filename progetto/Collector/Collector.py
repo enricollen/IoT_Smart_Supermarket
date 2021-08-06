@@ -38,6 +38,45 @@ class Collector:
         #Talking by the node-side, it should have a connection_status variable, indicating whether it is connected to the internet and if it is connected to the collector
         return
 
+    def check_if_already_connected(self, node_ip = "", node_id = "", kind = "", is_mqtt_connection = False):
+
+        if(kind not in KINDS_LIST):
+            logger.warning("Kind not recognised! Received kind: "+ kind)
+            return KIND_NOT_RECOGNISED
+
+        if(node_ip != "" and is_mqtt_connection):
+            logger.error("BAD USE OF THE FUNCTION check_if_already_registered!")
+            return False
+
+        if node_ip != "":
+            if(node_ip in self.coap_devices):
+                if kind == self.coap_devices[node_ip].kind:
+                    self.coap_devices[node_ip].update_last_seen()
+                    return ALREADY_REGISTERED
+                else:
+                    #case when a different kind of node is trying to connect with an ip already assigned to a node of another kind
+                    logger.error("A node is trying to connect using an IP already in use by another node! node_ip = " + node_ip + " | new node kind = " + kind + " | already registered kind = " + self.coap_devices[node_ip].kind)
+                    #here we could check the node.last_seen of the old node and verify that it is still alive, and handle the different cases
+                    return ADDRESS_ALREADY_IN_USE
+            else:
+                return NOT_REGISTERED
+        
+        if node_id != "" and is_mqtt_connection:
+            if(node_id in self.mqtt_devices):
+                if kind == self.mqtt_devices[node_id].kind:
+                    self.mqtt_devices[node_id].update_last_seen()
+                    return ALREADY_REGISTERED
+                else:
+                    #case when a different kind of node is trying to connect with an ip already assigned to a node of another kind
+                    logger.error("A node is trying to connect using an ID already in use by another node! node_id = " + node_id + " | new node kind = " + kind + " | already registered kind = " + self.mqtt_devices[node_id].kind)
+                    #here we could check the node.last_seen of the old node and verify that it is still alive, and handle the different cases
+                    return ADDRESS_ALREADY_IN_USE
+            else:
+                return NOT_REGISTERED
+            
+
+        return False
+
     def register_new_COAP_device(self, ip_addr, obj, kind):
         self.coap_devices[ip_addr] = obj
         logger.debug("[register_new_COAP_device] ip: " + ip_addr + "| kind: " + kind)
