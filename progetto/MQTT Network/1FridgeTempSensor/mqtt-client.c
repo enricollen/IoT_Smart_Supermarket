@@ -29,7 +29,7 @@
 #define MQTT_CLIENT_BROKER_IP_ADDR "fd00::1"
 
 #define DISCOVERY_TOPIC "discovery"
-#define NODE_KIND "FridgeTemperature"
+#define NODE_KIND "fridge_temp_sensor"
 
 static const char *broker_ip = MQTT_CLIENT_BROKER_IP_ADDR;
 
@@ -44,7 +44,7 @@ static const char *broker_ip = MQTT_CLIENT_BROKER_IP_ADDR;
 #define ENABLE_SENSE_TEMPERATURE true
 #define ENABLE_MQTT_PUBLISH true
 #define ENABLE_PERIODIC_PUBLISH true
-#define ENABLE_HANDLE_MQTT_CONNECT_RETURN_STATUS false
+#define ENABLE_HANDLE_MQTT_CONNECT_RETURN_STATUS true
 #define ENABLE_PUBLISH_CURRENT_STATE true
 #define ENABLE_PREPARE_MQTT_TOPIC_STRING true
 #define ENABLE_PUBLISH_DISCOVERY_MESSAGE true
@@ -325,8 +325,10 @@ PROCESS_THREAD(mqtt_client_process, ev, data)
 	      ev == PROCESS_EVENT_POLL){
 			  			  
 		  if(state==STATE_INIT){
-			 if(have_connectivity()==true)  
-				 state = STATE_NET_OK;
+			 if(have_connectivity()==true){  
+          state = STATE_NET_OK;
+          LOG_DBG("have_connectivity() returned true\n");
+        }
 		  } 
 		  
 		  if(state == STATE_NET_OK){
@@ -390,11 +392,9 @@ PROCESS_THREAD(mqtt_client_process, ev, data)
 		  }
 
 			  
-		if(state == STATE_SUBSCRIBED 
+		if(state == STATE_SUBSCRIBED){
       #if ENABLE_PERIODIC_PUBLISH
-      && (period%60==0)
-      #endif
-      ){  //publishes every 60 ticks
+      if (period%60==0){  //publishes every 60 ticks
 			
         #if ENABLE_SENSE_TEMPERATURE
         sense_temperature();
@@ -408,19 +408,24 @@ PROCESS_THREAD(mqtt_client_process, ev, data)
         mqtt_publish(&conn, NULL, pub_topic, (uint8_t *)app_buffer,
                 strlen(app_buffer), MQTT_QOS_LEVEL_0, MQTT_RETAIN_OFF);
         #endif
+      }
 
         #if ENABLE_PUBLISH_DISCOVERY_MESSAGE
-        sprintf(pub_topic, "%s", DISCOVERY_TOPIC); //a different topic for each temperature sensor node
-        LOG_DBG("[Publish Topic]: %s\n", pub_topic);
-        memset(app_buffer, 0, sizeof(app_buffer));
-        sprintf(app_buffer, "{\"id\": \"%s\", \"kind\": \"%s\"}", client_id, NODE_KIND);
-        mqtt_publish(&conn, NULL, pub_topic, (uint8_t *)app_buffer,
-                strlen(app_buffer), MQTT_QOS_LEVEL_0, MQTT_RETAIN_OFF);
+        if (period % 40 == 0){
+            sprintf(pub_topic, "%s", DISCOVERY_TOPIC); //a different topic for each temperature sensor node
+            LOG_DBG("[Publish Topic]: %s\n", pub_topic);
+            memset(app_buffer, 0, sizeof(app_buffer));
+            sprintf(app_buffer, "{\"id\": \"%s\", \"kind\": \"%s\"}", client_id, NODE_KIND);
+            mqtt_publish(&conn, NULL, pub_topic, (uint8_t *)app_buffer,
+                    strlen(app_buffer), MQTT_QOS_LEVEL_0, MQTT_RETAIN_OFF);
+        }
         #endif
-		
+
+      #endif
 		} else if ( state == STATE_DISCONNECTED ){
-		   LOG_ERR("Disconnected form MQTT broker\n");	
+		   LOG_ERR("Disconnected from MQTT broker\n");	
 		   // Recover from error
+       mqtt_disconnect(&conn);
        state = STATE_INIT;
 		}
     period++;
