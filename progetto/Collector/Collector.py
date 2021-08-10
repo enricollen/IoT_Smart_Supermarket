@@ -27,8 +27,10 @@ class Collector:
 
     mqtt_devices = {}   #key: node_id | value: bounded_object
 
+    all_devices = {}    #key: node_id | value: bounded_object
+
     def __init__(self):
-        #TO DO:
+        #DONE IN Node.py:
         #a dedicated thread (or more than one) that checks the connection to each COAP node, 
         # in case that it is not reachable, it deletes it from devices using a proper method
             #each COAP obj should have a field 'last_connection' containing the timestamp of the last successful connection
@@ -79,6 +81,10 @@ class Collector:
 
     def register_new_COAP_device(self, ip_addr, obj, kind):
         self.coap_devices[ip_addr] = obj
+        
+        #TO TEST:
+        self.register_node(obj.node_id, obj)
+        
         logger.debug("[register_new_COAP_device] ip: " + ip_addr + "| kind: " + kind)
         return self
     
@@ -103,6 +109,15 @@ class Collector:
 
         return self
 
+    def remove_price_display(self, node_id):
+        obj = self.all_devices[node_id]
+        node_ip = self.all_devices[node_id].ip_address
+        #here we check if this price-display was bounded with a scale device
+        self.unbind_price_and_scale(obj)
+        self.price_display_array.remove(node_ip)
+        del self.coap_devices[node_ip]
+        return
+
     def register_new_scale_device(self, ip_addr):
         try:
             scale_device = ScaleDevice(ip_addr)
@@ -119,8 +134,17 @@ class Collector:
         self.bind_price_and_scale(ip_addr_scale_device=ip_addr) 
 
         return self
+    
+    def remove_scale_device(self, node_id):
+        obj = self.all_devices[node_id]
+        node_ip = self.all_devices[node_id].ip_address
+        #here we check if this price-display was bounded with a scale device
+        self.unbind_price_and_scale(obj)
+        self.shelf_scale_device_array.remove(node_ip)
+        del self.coap_devices[node_ip]
+        return
 
-    #utility array to make bind prcess easier
+    #utility array to make binding process easier
     spare_price_displays = [] 
     spare_scale_devices = []
 
@@ -141,10 +165,37 @@ class Collector:
                 ip_addr_price_display = self.spare_price_displays.pop()
                 self.coupled_scale_and_price.append([ip_addr_scale_device, ip_addr_price_display])
 
+
+    def unbind_price_and_scale(self, obj):
+
+        found = False
+
+        for couple in self.coupled_scale_and_price:
+            if obj in couple:
+                found = True
+                self.coupled_scale_and_price.remove(couple)
+                couple.pop(obj)
+                spare_obj = couple.pop()
+                #we want to know the kind of this obj and add it to the correct spare_array
+                if spare_obj.kind == PRICE_DISPLAY:
+                    self.spare_price_displays.append(spare_obj)
+                elif spare_obj.kind == SHELF_SCALE:
+                    self.spare_scale_devices.append(spare_obj)
+                return
+
+        if not found:
+            if obj.kind == PRICE_DISPLAY:
+                self.spare_price_displays.remove(obj)
+            elif obj.kind == SHELF_SCALE:
+                self.spare_scale_devices.remove(obj)
+
+        return
+
 #---------------------------------------------------------------------------------------------
 
     def register_new_mqtt_device(self, node_id, obj, kind):
         self.mqtt_devices[node_id] = obj
+        self.register_node(node_id, obj)
         logger.debug("[register_new_MQTT_device] node_id: " + node_id + "| kind: " + kind)
         return self
 
@@ -169,22 +220,45 @@ class Collector:
 
         return self
 
+    def remove_fridge_temperature_sensor(self, node_id):
+        self.fridge_temp_sensor_array.remove(node_id)
+        del self.mqtt_devices[node_id]
+        return
+
 #---------------------------------------------------------------------------------------------
 
+    def register_node(self, node_id, obj):
+        self.all_devices[node_id] = obj
+        return True
+
+    def remove_node(self, node_id, node_ip = None):
+
+        node_kind = self.all_devices[node_id].kind
+
+        action = {
+            FRIDGE_TEMPERATURE_SENSOR: self.remove_fridge_temperature_sensor,
+            PRICE_DISPLAY: self.remove_price_display,
+            SHELF_SCALE: self.remove_scale_device
+        }
+
+        try:
+            action[node_kind](node_id)
+        except Exception as e:
+            logger.warning("Cannot remove node! node_kind = " + node_kind)
+            return False
+
+        del self.all_devices[node_id]
+
+        return True
+
     def close(self):
-        """while 1:
-            if len(self.price_display_array):
-                el = self.price_display_array.pop()
-                el.delete()
-                
-            elif len(self.shelf_scale_device_array):
-                el = self.shelf_scale_device_array.pop()
-                el.delete()
-            else:
-                break"""
-        for ip, obj in self.coap_devices.items():
-            #logger.info("[closing connection with]: " + obj.kind + " | ip: " + ip)
-            obj.delete()
-            del obj
+        for node_id in self.all_devices.keys():
+            self.remove_node(node_id=node_id)
+        
+        return
+    
+    def __del__(self):
+        self.close()
+
             
 collector = Collector()
