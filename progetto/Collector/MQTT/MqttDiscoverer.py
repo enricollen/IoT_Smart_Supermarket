@@ -71,7 +71,7 @@ class MQTTDiscoverer(MqttClient):
                 outcome = WRONG_PAYLOAD
 
         elif node_connection_status == ADDRESS_ALREADY_IN_USE:
-            logger.warning("Duplicate mqtt node with same node_id!")
+            logger.warning("[x] Duplicate mqtt node with same node_id")
             outcome = ADDRESS_ALREADY_IN_USE
 
         elif node_connection_status:

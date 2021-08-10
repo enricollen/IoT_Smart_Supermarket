@@ -11,7 +11,9 @@ logger = logging.getLogger("COAPModule")
 from COAP.const import NO_CHANGE, DEFAULT_STYLE, YELLOW_STYLE, CANNOT_PARSE_JSON, bold
 DEFAULT_COAP_PORT = 5683
 
-#classe astratta con alcuni metodi da implementare
+from Node import Node
+
+#abstract class: use this to implement node types connected via CoAP
 
 class COAPModel:
     ip_address = ""
@@ -45,9 +47,7 @@ class COAPModel:
         #client.stop()  #DO NOT STOP THE OBSERVER CLIENT
         return self
 
-    #@abstractmethod #not sure if it should be abstract or not
     def observe_handler(self, response):
-        #TO DO:
         #in some ways receives current node state whenever it updates its state and notifies the subscribers,
         #we then have to update object state and store it in the database
         ret = self.parse_state_response(response)
@@ -77,6 +77,10 @@ class COAPModel:
         except Exception as e:
             logger.critical("exception during update_state_from_json | json = " + str(response.payload))
             raise(e)
+        #---------------------------
+        if issubclass(self, Node):
+            self.update_last_seen()
+        #---------------------------
         if ret == NO_CHANGE:
             logger.info("[" + self.ip_address +"]["+ self.class_style(self.__class__.__name__ + ".parse_state_response") + "]: no change")
             return self

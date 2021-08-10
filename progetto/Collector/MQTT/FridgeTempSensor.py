@@ -35,12 +35,14 @@ class FridgeTempSensor(MqttClient, Node):
     def change_setpoint(self, new_setpoint):
         #TO DO:
         #should publish a message on self.pub_topic in the appropriate format
+
+        #remember to call self.update_last_seen() if everything works
         pass
 
     def on_message(self, client, userdata, msg):
-        #TO TEST:
-        #should parse state from json and update class state,
-        #it should also save the received state in the database
+        #TESTed:
+        #parse state from json and update class state,
+        #it also save the received state in the database
         if(msg.payload == None):
             logger.warning("["+ self.__class__.__name__ + ".on_message]: Received empty MQTT message from " + self.node_id)
             return False
@@ -57,7 +59,9 @@ class FridgeTempSensor(MqttClient, Node):
         except Exception as e:
             logger.critical("exception during update_state_from_json | json = " + str(msg.payload))
             raise(e)
-
+        #--------------------------
+        self.update_last_seen()
+        #--------------------------
         if ret == NO_CHANGE:
             logger.info("[" + self.node_id +"]["+ self.class_style(self.__class__.__name__ + ".parse_state_response") + "]: no change")
             return self
