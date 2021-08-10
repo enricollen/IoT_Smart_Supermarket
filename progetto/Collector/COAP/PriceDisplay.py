@@ -44,13 +44,13 @@ class PriceDisplay(COAPModel, Node):
             if self.current_price == json[PRICE_KEY] and \
                     self.node_ts_in_seconds == json[NOW_KEY] and \
                     self.last_price_change_in_seconds == json[LAST_CHANGE_TS_KEY] and \
-                    self.id == json[NODE_ID_KEY]:
+                    self.node_id == json[NODE_ID_KEY]:
                 no_change = True
 
             self.current_price = json[PRICE_KEY]
             self.node_ts_in_seconds = json[NOW_KEY]
             self.last_price_change_in_seconds = json[LAST_CHANGE_TS_KEY]
-            self.id = json[NODE_ID_KEY]
+            self.node_id = json[NODE_ID_KEY]
         except:
             logger.warning("unable to parse state from json")
             return False
@@ -68,7 +68,7 @@ class PriceDisplay(COAPModel, Node):
     def save_current_state(self):
         conn = DatabaseConnection()
         sql = "INSERT INTO price_display_state(node_id, timestamp, current_price, last_price_change) VALUES(%s, NOW(), %s, %s)"
-        params = (self.id, self.current_price, self.last_price_change)
+        params = (self.node_id, self.current_price, self.last_price_change)
         conn.cursor.execute(sql, params)
         conn.dbConn.commit()
 

@@ -32,12 +32,12 @@ class RefillSensor(COAPModel):
         no_change = False
         try:
             if (self.last_refill_in_seconds == json[LAST_REFILL_JSON_KEY] and \
-                self.id == json[ID_KEY] and \
+                self.node_id == json[ID_KEY] and \
                 self.node_ts_in_seconds == json[NOW_KEY]):
                     no_change = True
 
             self.last_refill_in_seconds = json[LAST_REFILL_JSON_KEY]
-            self.id = json[ID_KEY]
+            self.node_id = json[ID_KEY]
             self.node_ts_in_seconds = json[NOW_KEY]
         except:
             logging.warning("unable to parse state from json")
@@ -53,7 +53,7 @@ class RefillSensor(COAPModel):
     def save_current_state(self):
         conn = DatabaseConnection()
         sql = "INSERT INTO last_refill(node_id, timestamp, last_refill_ts) VALUES(%s, NOW(), %s)"
-        params = (self.id, self.last_refill)
+        params = (self.node_id, self.last_refill)
         conn.cursor.execute(sql, params)
         conn.dbConn.commit()
 

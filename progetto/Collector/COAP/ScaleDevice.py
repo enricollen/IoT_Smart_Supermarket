@@ -12,14 +12,14 @@ class ScaleDevice(Node):
     weight_sensor = 0
     refill_sensor = 0   
     linked_price_display = ""
-    ip_addr = ""
+    ip_address = ""
 
     kind = SHELF_SCALE
 
     def __init__(self, ip_addr):
         self.weight_sensor = WeightSensor(ip_addr)
         self.refill_sensor = RefillSensor(ip_addr)
-        self.ip_addr = ip_addr
+        self.ip_address = ip_addr
         super.__init__(self)
 
         
