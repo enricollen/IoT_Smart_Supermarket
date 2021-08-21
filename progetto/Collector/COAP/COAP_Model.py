@@ -11,7 +11,7 @@ logger = logging.getLogger("COAPModule")
 from COAP.const import NO_CHANGE, DEFAULT_STYLE, YELLOW_STYLE, CANNOT_PARSE_JSON, bold
 DEFAULT_COAP_PORT = 5683
 
-from Node import Node
+import Node
 
 #abstract class: use this to implement node types connected via CoAP
 
@@ -78,7 +78,7 @@ class COAPModel:
             logger.critical("exception during update_state_from_json | json = " + str(response.payload))
             raise(e)
         #---------------------------
-        if issubclass(self, Node):
+        if issubclass(self.__class__, Node.Node):
             self.update_last_seen()
         #---------------------------
         if ret == NO_CHANGE:

@@ -2,9 +2,9 @@ from threading import Timer
 import datetime
 
 from MQTT.MqttClient import MqttClient
-from COAP.COAP_Model import COAPModel
+import COAP.COAP_Model
 
-from Collector import collector
+import Collector
 
 import logging
 default_logger = logging.getLogger()
@@ -39,7 +39,7 @@ class Node:
         else:   #if it is CoAP node
             #we should make a GET request and check if we receive a response,
             #in case we receive nothing, the node should be deleted!
-            if issubclass(self, COAPModel):
+            if issubclass(self.__class__, COAPModel):
                 outcome = self.get_current_state()
                 if outcome:
                     self.update_last_seen()
@@ -49,7 +49,7 @@ class Node:
         return
 
     def is_mqtt_node(self):
-        if issubclass(self, MqttClient):
+        if issubclass(self.__class__, MqttClient):
             return True
         else:
             return False
@@ -68,7 +68,8 @@ class Node:
         return
 
     def reset_timer_presence_checker_thread(self):
-        self.thread.cancel()
+        if isinstance(self.thread, Timer):
+            self.thread.cancel()
         self.create_presence_checker_thread()
         return
     

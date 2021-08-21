@@ -18,7 +18,7 @@ NAME_STYLE = CYAN_STYLE
 class RefillSensor(COAPModel):
     
     last_refill = -1
-    id = ""
+    node_id = ""
     node_ts_in_seconds = -1
     last_refill_in_seconds = -1
 

@@ -19,7 +19,7 @@ DEFAULT_WEIGHT = 2000
 class WeightSensor(COAPModel):
     
     current_weight = DEFAULT_WEIGHT
-    id = ""
+    node_id = ""
     now_in_seconds = -1
     
 
