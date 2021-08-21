@@ -20,8 +20,7 @@ class ScaleDevice(Node):
         self.weight_sensor = WeightSensor(ip_addr)
         self.refill_sensor = RefillSensor(ip_addr)
         self.ip_address = ip_addr
-        super.__init__(self)
-
+        super().__init__()
         
     def bind_price_display(self, price_display_ip):
         if(self.linked_price_display!=""):

@@ -65,4 +65,12 @@ TABLE NAME: last_refill
 |     ID     | node_id  |  now()   | last_refill_ts |
 +------------+----------+----------+----------------+
 
+CREATE TABLE `last_refill` (
+   `ID` int(11) NOT NULL AUTO_INCREMENT,
+   `node_id` varchar(50) NOT NULL,
+   `timestamp` timestamp NULL DEFAULT current_timestamp(),
+   `last_refill_ts` timestamp NOT NULL DEFAULT current_timestamp(),
+      PRIMARY KEY (`ID`)
+ ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 """
