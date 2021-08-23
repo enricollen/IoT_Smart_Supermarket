@@ -21,6 +21,7 @@ class RefillSensor(COAPModel):
     node_id = ""
     node_ts_in_seconds = -1
     last_refill_in_seconds = -1
+    number_of_refills = 0
 
     def __init__(self, ip_addr):
         self.resource_path = REFILL_RESOURCE_PATH
@@ -35,6 +36,9 @@ class RefillSensor(COAPModel):
                 self.node_id == json[ID_KEY] and \
                 self.node_ts_in_seconds == json[NOW_KEY]):
                     no_change = True
+
+            if self.last_refill_in_seconds != json[LAST_REFILL_JSON_KEY]:
+                self.number_of_refills = self.number_of_refills + 1
 
             self.last_refill_in_seconds = json[LAST_REFILL_JSON_KEY]
             self.node_id = json[ID_KEY]
