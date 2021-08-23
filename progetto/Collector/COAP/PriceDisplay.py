@@ -27,6 +27,7 @@ class PriceDisplay(COAPModel, Node):
     current_price = DEFAULT_PRICE
     last_price_change = -1
     linked_scale_device = ""
+    initial_price = -1  #we will use that for the price ranges
 
     kind = PRICE_DISPLAY
 
@@ -46,6 +47,10 @@ class PriceDisplay(COAPModel, Node):
                     self.last_price_change_in_seconds == json[LAST_CHANGE_TS_KEY] and \
                     self.node_id == json[NODE_ID_KEY]:
                 no_change = True
+
+            #we assert that at the moment of the first connection the current price of the PriceDisplay is the default price (we will use that for the price ranges)
+            if self.initial_price == -1:
+                self.initial_price = json[PRICE_KEY]
 
             self.current_price = json[PRICE_KEY]
             self.node_ts_in_seconds = json[NOW_KEY]
@@ -74,7 +79,7 @@ class PriceDisplay(COAPModel, Node):
 
     def set_new_price(self, new_price):
         
-        req_body = 'new_price='+new_price
+        req_body = 'new_price='+str(new_price)
 
         return self.set_new_values(req_body, use_default_callback=True)
     
