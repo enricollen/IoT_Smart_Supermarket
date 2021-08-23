@@ -42,12 +42,14 @@ class ScaleDevice(Node):
     #proper interface methods to get or set the state of the resources of the node.
     #those methods should also call update_last_seen method on the Nod
 
-    def bind_price_display(self, price_display_ip):
+    def bind_price_display(self, price_display_obj):
         if(self.linked_price_display!=""):
             logger.warning("[ScaleDevice: bind_scale_device] Scale Device has already been associated with Price Display")
             return False
 
-        self.linked_price_display = price_display_ip
+        assert isinstance(price_display_obj, PriceDisplay)
+
+        self.linked_price_display = price_display_obj
 
     def delete(self):
         if isinstance(self.weight_sensor, WeightSensor):

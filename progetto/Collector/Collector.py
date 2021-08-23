@@ -105,7 +105,7 @@ class Collector:
         self.price_display_array.append(price_display)
 
         #logic for binding a weight sensor with correspondent price display
-        self.bind_price_and_scale(ip_addr_price_display=ip_addr) 
+        self.bind_price_and_scale(ip_addr_price_display=ip_addr, obj_price_display = price_display) 
 
         return self
 
@@ -131,7 +131,7 @@ class Collector:
         self.shelf_scale_device_array.append(scale_device)
 
         #logic for binding a weight sensor with correspondent price display
-        self.bind_price_and_scale(ip_addr_scale_device=ip_addr) 
+        self.bind_price_and_scale(ip_addr_scale_device=ip_addr,obj_scale_device = scale_device) 
 
         return self
     
@@ -148,22 +148,30 @@ class Collector:
     spare_price_displays = [] 
     spare_scale_devices = []
 
-    def bind_price_and_scale(self, ip_addr_price_display="", ip_addr_scale_device=""):
-        if ip_addr_price_display!="": #we want to bind price display with a spare scale device
+    def bind_price_and_scale(self, ip_addr_price_display="", obj_price_display = None, ip_addr_scale_device="", obj_scale_device = None):
+        if ip_addr_price_display!="" and obj_price_display: #we want to bind price display with a spare scale device
             if len(self.spare_scale_devices)==0:
-                self.spare_price_displays.append(ip_addr_price_display)
+                self.spare_price_displays.append(obj_price_display)
                 return
             else:
-                ip_addr_scale_device = self.spare_scale_devices.pop()
-                self.coupled_scale_and_price.append([ip_addr_scale_device, ip_addr_price_display])
+                obj_scale_device = self.spare_scale_devices.pop()
+                assert isinstance(obj_scale_device, ScaleDevice), "[collector.bind_price_and_scale]: obj_scale_device is not instance of ScaleDevice!"
+                assert isinstance(obj_price_display, PriceDisplay), "[collector.bind_price_and_scale]: obj_price_display is not instance of PriceDisplay!"
+                obj_scale_device.bind_price_display(obj_price_display)
+                obj_price_display.bind_scale_device(obj_scale_device)
+                self.coupled_scale_and_price.append([obj_scale_device, obj_price_display])
 
-        if ip_addr_scale_device!="": #we want to bind scale device with a spare price display
+        elif ip_addr_scale_device!="" and obj_scale_device: #we want to bind scale device with a spare price display
             if len(self.spare_price_displays)==0:
-                self.spare_scale_devices.append(ip_addr_scale_device)
+                self.spare_scale_devices.append(obj_scale_device)
                 return
             else:
-                ip_addr_price_display = self.spare_price_displays.pop()
-                self.coupled_scale_and_price.append([ip_addr_scale_device, ip_addr_price_display])
+                obj_price_display = self.spare_price_displays.pop()
+                assert isinstance(obj_scale_device, ScaleDevice), "[collector.bind_price_and_scale]: obj_scale_device is not instance of ScaleDevice!"
+                assert isinstance(obj_price_display, PriceDisplay), "[collector.bind_price_and_scale]: obj_price_display is not instance of PriceDisplay!"
+                obj_scale_device.bind_price_display(obj_price_display)
+                obj_price_display.bind_scale_device(obj_scale_device)
+                self.coupled_scale_and_price.append([obj_scale_device, obj_price_display])
 
 
     def unbind_price_and_scale(self, obj):

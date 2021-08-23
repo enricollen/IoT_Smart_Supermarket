@@ -78,12 +78,12 @@ class PriceDisplay(COAPModel, Node):
 
         return self.set_new_values(req_body, use_default_callback=True)
     
-    def bind_scale_device(self, scale_ip):
+    def bind_scale_device(self, scale_obj):
         if(self.linked_scale_device!=""):
             logger.warning("[PriceDisplay: bind_scale_device] Price Display has already been associated with Scale Sensor")
             return False
 
-        self.linked_scale_device = scale_ip
+        self.linked_scale_device = scale_obj
 
 """
 TABLE NAME: price_display_state
