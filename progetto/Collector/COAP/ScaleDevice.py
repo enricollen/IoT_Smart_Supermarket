@@ -38,9 +38,30 @@ class ScaleDevice(Node):
             self.update_last_seen()
             return self
 
-    #TO DO:
+    #------------------------------------------------------------------------------------------------------------------------
     #proper interface methods to get or set the state of the resources of the node.
-    #those methods should also call update_last_seen method on the Nod
+    #those methods should also call update_last_seen method on the Node
+
+    def prompt_shelf_refill(self):
+        return self.refill_sensor.prompt_refill()
+    
+    def get_current_weight(self):
+        outcome = self.weight_sensor.get_current_state()
+        if outcome != -1 and outcome:
+            self.update_last_seen()
+            return self.weight_sensor.current_weight
+        else:
+            return False
+
+    def get_last_refill_ts(self):
+        outcome = self.refill_sensor.get_current_state()
+        if outcome != -1 and outcome:
+            self.update_last_seen()
+            return self.refill_sensor.last_refill
+        else:
+            return False
+
+    #------------------------------------------------------------------------------------------------------------------------
 
     def bind_price_display(self, price_display_obj):
         if(self.linked_price_display!=""):
