@@ -50,6 +50,12 @@ class RefillSensor(COAPModel):
         else:
             return self
 
+    def prompt_refill(self):
+        
+        req_body = 'refill=TRUE'
+
+        return self.set_new_values(req_body, use_default_callback=True)
+
     def save_current_state(self):
         conn = DatabaseConnection()
         sql = "INSERT INTO last_refill(node_id, timestamp, last_refill_ts) VALUES(%s, NOW(), %s)"

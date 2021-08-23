@@ -1,5 +1,6 @@
 from DatabaseConnection import DatabaseConnection
 from coapthon.client.helperclient import HelperClient
+from coapthon import defines
 from abc import ABC, abstractmethod
 import json
 
@@ -80,6 +81,7 @@ class COAPModel:
         #---------------------------
         if issubclass(self.__class__, Node.Node):
             self.update_last_seen()
+        #else if it is not a Node istance, it is a resource of a multiresources Node, in that case the update_last_seen should be handled by the wrapper class
         #---------------------------
         if ret == NO_CHANGE:
             logger.info("[" + self.ip_address +"]["+ self.class_style(self.__class__.__name__ + ".parse_state_response") + "]: no change")
@@ -101,13 +103,32 @@ class COAPModel:
         client.stop()
         return self.parse_state_response(response)
 
+    def set_new_values(self, req_body, callback = None, use_default_callback = False):
+        #make a COAP request using method POST to the RESOURCE endpoint
+        #the body of the request differes per each kind of node
+
+        #a callback function that check the response from the node, in case of error it logs the error
+        def default_callback(message):
+            #message is instance of the class Message in CoAPthon
+            #it has the attributes code, payload, etc...
+            #we want to check the result code and the response payload
+            if message.code == defines.Codes.BAD_REQUEST.number:
+                logger.warning("[!] set_new_values error: bad request | response payload : " + str(message.payload))
+                #consider if removing the node or invoking some checks on that node
+            else:
+                logger.debug("set_new_values: received node response = " + str(message.payload))
+            return
+
+        if use_default_callback:
+            callback = default_callback
+
+        client = HelperClient(server=(self.ip_address, DEFAULT_COAP_PORT))
+        response = client.post(self.resource_path, req_body, callback=callback)
+        client.stop()
+        return
 
     @abstractmethod
     def update_state_from_json(json):
-        pass
-
-    @abstractmethod
-    def set_new_values(self):
         pass
 
     @abstractmethod

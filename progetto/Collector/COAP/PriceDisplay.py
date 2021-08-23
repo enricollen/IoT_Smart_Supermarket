@@ -72,9 +72,11 @@ class PriceDisplay(COAPModel, Node):
         conn.cursor.execute(sql, params)
         conn.dbConn.commit()
 
-    def set_new_values(self):
-        #TO DO...
-        return self
+    def set_new_price(self, new_price):
+        
+        req_body = 'new_price='+new_price
+
+        return self.set_new_values(req_body, use_default_callback=True)
     
     def bind_scale_device(self, scale_ip):
         if(self.linked_scale_device!=""):
