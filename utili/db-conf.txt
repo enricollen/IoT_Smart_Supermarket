@@ -5,7 +5,7 @@ CREATE DATABASE smart_supermarket;
 GRANT ALL PRIVILEGES ON smart_supermarket.* TO paciollen;
 
 per effettuare un dump:
-    msqldump -u ... -p [databases] > DUMP_FILENAME.sql
+    mysqldump -u ... -p [databases] > DUMP_FILENAME.sql
 
 
 da terminale per ripristinare un dump:

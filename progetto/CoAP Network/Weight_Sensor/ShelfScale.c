@@ -17,7 +17,7 @@
 #define LOG_MODULE "Shelf Scale"
 #define LOG_LEVEL LOG_LEVEL_APP
 
-#define SENSOR_TYPE "ShelfScale"
+#define SENSOR_TYPE "shelf_scale"
 const char* node_name = "Weight&Refill Sensors and CoAP Server";
 #include "../network_config.h"
 
