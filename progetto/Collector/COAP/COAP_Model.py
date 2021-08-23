@@ -57,7 +57,14 @@ class COAPModel:
 
         #method to stop observing: self.observer_client.cancel_observing(response, True)  #True if you want to send RST message, else False
         return
-        #pass
+    
+    def new_message_from_the_node(self):
+        #---------------------------
+        if issubclass(self.__class__, Node.Node):
+            self.update_last_seen()
+        #else if it is not a Node istance, it is a resource of a multiresources Node, in that case the update_last_seen should be handled by the wrapper class
+        #---------------------------
+        return
 
     def parse_state_response(self, response):
 
@@ -78,11 +85,9 @@ class COAPModel:
         except Exception as e:
             logger.critical("exception during update_state_from_json | json = " + str(response.payload))
             raise(e)
-        #---------------------------
-        if issubclass(self.__class__, Node.Node):
-            self.update_last_seen()
-        #else if it is not a Node istance, it is a resource of a multiresources Node, in that case the update_last_seen should be handled by the wrapper class
-        #---------------------------
+        
+        self.new_message_from_the_node()
+
         if ret == NO_CHANGE:
             logger.info("[" + self.ip_address +"]["+ self.class_style(self.__class__.__name__ + ".parse_state_response") + "]: no change")
             return self
@@ -117,6 +122,7 @@ class COAPModel:
                 #consider if removing the node or invoking some checks on that node
             else:
                 logger.debug("set_new_values: received node response = " + str(message.payload))
+                self.new_message_from_the_node()
             return
 
         if use_default_callback:

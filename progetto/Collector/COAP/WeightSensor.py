@@ -49,6 +49,15 @@ class WeightSensor(COAPModel):
         else:
             return self
 
+    def new_message_from_the_node(self):
+    #we redefine the method that is invoked each time that the weight changes
+        #here we should also call update_last_seen on the wrapper class of this resource (ScaleDevice):
+        self.update_last_seen()
+        #we can bind here a callback that will count the number of changes and eventually trigger the price change
+        self.number_of_weight_changes = self.number_of_weight_changes + 1
+        #here we should call another callback (maybe a method of ShelfScale) that will check the number of refills, the number of weight_changes and eventually change the price (using another callback received from the collector)
+
+
     def save_current_state(self):
         conn = DatabaseConnection()
         sql = "INSERT INTO weight_sensor_state(node_id, timestamp, current_weight) VALUES(%s, NOW(), %s)"
