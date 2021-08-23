@@ -21,12 +21,23 @@ class WeightSensor(COAPModel):
     current_weight = DEFAULT_WEIGHT
     node_id = ""
     now_in_seconds = -1
-    
 
-    def __init__(self, ip_addr):
+    number_of_weight_changes = 0
+    
+    def update_last_seen():
+        logger.error("ATTENTION! WeightSensor->update_last_seen method not initialized!")
+        return
+
+    def price_variation_handler():
+        logger.error("ATTENTION! WeightSensor->price_variation_handler method not initialized!")
+        return
+
+    def __init__(self, ip_addr, update_last_seen_callback, price_variation_handler):
         self.resource_path = WEIGHT_RESOURCE_PATH
         self.observable = IS_OBSERVABLE
         self.name_style = NAME_STYLE
+        self.update_last_seen = update_last_seen_callback
+        self.price_variation_handler = price_variation_handler
         super().__init__(ip_addr)
 
     def update_state_from_json(self, json):
@@ -56,6 +67,7 @@ class WeightSensor(COAPModel):
         #we can bind here a callback that will count the number of changes and eventually trigger the price change
         self.number_of_weight_changes = self.number_of_weight_changes + 1
         #here we should call another callback (maybe a method of ShelfScale) that will check the number of refills, the number of weight_changes and eventually change the price (using another callback received from the collector)
+        self.price_variation_handler()
 
 
     def save_current_state(self):

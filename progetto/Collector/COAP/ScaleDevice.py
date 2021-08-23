@@ -1,3 +1,4 @@
+from progetto.Collector.COAP.PriceDisplay import PriceDisplay
 from COAP.WeightSensor import WeightSensor
 from COAP.RefillSensor import RefillSensor
 
@@ -11,18 +12,69 @@ class ScaleDevice(Node):
     
     weight_sensor = 0
     refill_sensor = 0   
-    linked_price_display = ""
+    linked_price_display = ""   #the obj of the linked price_display
     ip_address = ""
-
+    
     kind = SHELF_SCALE
 
     def __init__(self, ip_addr):
-        self.weight_sensor = WeightSensor(ip_addr)
+
+
+        def update_last_seen_callback():
+            self.update_last_seen()
+
+        self.weight_sensor = WeightSensor(ip_addr, update_last_seen_callback, self.weight_changes_handler)
         self.refill_sensor = RefillSensor(ip_addr)
 
         self.node_id = self.weight_sensor.node_id   #both the resources share the same node_id
         self.ip_address = ip_addr
         super().__init__()
+
+    def weight_changes_handler(self):
+        if (self.linked_price_display == "" or not isinstance(self.linked_price_display, PriceDisplay)):
+            logger.debug("No linked price_display for the scale device id " + self.node_id)
+            return False
+
+        num_of_weight_changes = self.weight_sensor.number_of_weight_changes
+        seconds_since_begin = self.weight_sensor.now_in_seconds
+
+        num_of_shelf_refills = self.refill_sensor.number_of_refills
+        
+        price_obj = self.linked_price_display
+        
+        initial_price = price_obj.initial_price
+        current_price = price_obj.current_price
+        #here we can implement the logic for the price changing, after we can easily change the price
+        """
+        THE PRICE CHANGES' RULES:
+        1a. A product has a good selling ratio if num_of_shelf_refills / hour is more than 200
+        1b. A product has a bad selling ratio if num_of_shelf_refills / hour is less than 100
+        1c. A product has a terrible selling ratio if num_of_shelf_refills / hour is less than 10
+        2a. A product can increase its price until 30% more than the initial price
+        2b. A product can decrease its price until 60% less than the initial price
+
+        """
+        number_of_hours = seconds_since_begin / 3600
+
+        if( (num_of_shelf_refills / number_of_hours) > 200):
+            #case 1a -> we have to increase the price
+            new_price = current_price * 1.1
+            if(new_price > initial_price * 1.3):
+                new_price = initial_price * 1.3
+        elif( (num_of_shelf_refills / number_of_hours) < 10):
+            #case 1c -> we want to set the price to minimum value
+            new_price = initial_price * 0.4
+        elif( (num_of_shelf_refills / number_of_hours) < 100):
+             #case 1b -> we have to decrease the price
+            new_price = current_price * 0.9
+            if(new_price < initial_price * 0.4):
+                new_price = initial_price * 0.4
+        else:
+            #normal selling ratio
+            return
+
+        price_obj.set_new_price(new_price)
+        return
         
     def is_multi_resources_node(self):
         return True
