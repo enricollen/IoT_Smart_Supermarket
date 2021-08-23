@@ -1,4 +1,4 @@
-from progetto.Collector.COAP.PriceDisplay import PriceDisplay
+from COAP.PriceDisplay import PriceDisplay
 from COAP.WeightSensor import WeightSensor
 from COAP.RefillSensor import RefillSensor
 
@@ -23,11 +23,13 @@ class ScaleDevice(Node):
         def update_last_seen_callback():
             self.update_last_seen()
 
-        self.weight_sensor = WeightSensor(ip_addr, update_last_seen_callback, self.weight_changes_handler)
         self.refill_sensor = RefillSensor(ip_addr)
 
-        self.node_id = self.weight_sensor.node_id   #both the resources share the same node_id
+        self.node_id = self.refill_sensor.node_id   #both the resources share the same node_id
         self.ip_address = ip_addr
+
+        self.weight_sensor = WeightSensor(ip_addr, update_last_seen_callback, self.weight_changes_handler)
+        
         super().__init__()
 
     def weight_changes_handler(self):

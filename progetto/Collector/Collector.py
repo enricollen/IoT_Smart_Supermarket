@@ -265,7 +265,8 @@ class Collector:
         return True
 
     def close(self):
-        for node_id in self.all_devices.keys():
+        node_ids = self.all_devices.keys()
+        for node_id in node_ids:
             self.remove_node(node_id=node_id)
         
         return
