@@ -67,7 +67,6 @@ class Node:
             return False
 
     def prompt_the_collector_to_delete_this(self):
-        #TO DO:
         #a proper collector method to delete the node from the connected node list to be called from here
         Collector.collector.remove_node(self.node_id)
         return

@@ -14,6 +14,14 @@ DISCOVERY_TOPIC = "discovery"
 ID_KEY = "id"
 KIND_KEY="kind"
 
+
+
+#in "discovery" we receive a message:
+#    id   = 434334
+#    kind = FRIDGE_TEMPERATURE_SENSOR | ...
+#depending on id and kind we start another mqttclient that subscribes to the topic of the discovered node
+
+
 #the MQTTDiscoverer expects to read messages about new nodes connected. The expected syntax is:
 # - JSON
 # {"id": "xxxx", "kind": "yyyy"}

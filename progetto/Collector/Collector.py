@@ -43,11 +43,11 @@ class Collector:
     def check_if_already_connected(self, node_ip = "", node_id = "", kind = "", is_mqtt_connection = False):
 
         if(kind not in KINDS_LIST):
-            logger.warning("Kind not recognised! Received kind: "+ kind)
+            logger.warning("[check_if_already_connected]: Kind not recognised! Received kind: "+ kind)
             return KIND_NOT_RECOGNISED
 
         if(node_ip != "" and is_mqtt_connection):
-            logger.error("BAD USE OF THE FUNCTION check_if_already_registered!")
+            logger.error("BAD USE OF THE FUNCTION check_if_already_connected!")
             return False
 
         if node_ip != "":
@@ -114,7 +114,7 @@ class Collector:
         node_ip = self.all_devices[node_id].ip_address
         #here we check if this price-display was bounded with a scale device
         self.unbind_price_and_scale(obj)
-        self.price_display_array.remove(node_ip)
+        self.price_display_array.remove(obj)    #node_ip
         del self.coap_devices[node_ip]
         return
 
@@ -140,7 +140,7 @@ class Collector:
         node_ip = self.all_devices[node_id].ip_address
         #here we check if this price-display was bounded with a scale device
         self.unbind_price_and_scale(obj)
-        self.shelf_scale_device_array.remove(node_ip)
+        self.shelf_scale_device_array.remove(obj)   #node_ip
         del self.coap_devices[node_ip]
         return
 
@@ -221,7 +221,10 @@ class Collector:
         return self
 
     def remove_fridge_temperature_sensor(self, node_id):
-        self.fridge_temp_sensor_array.remove(node_id)
+        #TO TEST:
+        #check that the remove from temp_sensor_array works properly
+        obj = self.mqtt_devices[node_id]
+        self.fridge_temp_sensor_array.remove(obj)   #node_id
         del self.mqtt_devices[node_id]
         return
 

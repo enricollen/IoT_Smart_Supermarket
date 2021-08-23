@@ -33,13 +33,6 @@ def boot_logo():
 
 server = CoAPServer(COAP_SERVER_IP, COAP_SERVER_PORT)
 
-#mqtt_client = MqttClient(sub_topics="discovery")  #sub_topics=["fridge/temperature", "fridge/alarm"]
-"""
-in "discovery" we receive a message:
-    id   = 434334
-    kind = FRIDGE_TEMPERATURE_SENSOR | ...
-depending on id and kind we start another mqttclient that subscribes to the topic of the discovered node
-"""
 try:
     boot_logo()
     print("Starting smart SuperMarket Collector")
@@ -51,6 +44,7 @@ try:
         print(e)
 
     server.listen(10)
+
 except KeyboardInterrupt:
     print("\nServer Shutdown")
     server.close()
