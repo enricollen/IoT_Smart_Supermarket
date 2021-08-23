@@ -404,7 +404,7 @@ PROCESS_THREAD(mqtt_client_process, ev, data)
         // Publish something
         sprintf(pub_topic, "fridge/%s/temperature", client_id); //a different topic for each temperature sensor node
         LOG_DBG("[Publish Topic]: %s\n", pub_topic);
-        sprintf(app_buffer, "{\"temperature\": %.2f, \"timestamp\": %lu, \"unit\": \"celsius\"}", current_temperature, clock_seconds());
+        sprintf(app_buffer, "{\"temperature\": %.2f, \"timestamp\": %lu, \"unit\": \"celsius\", \"desired_temp\":%.2f}", current_temperature, clock_seconds(), desired_temperature);
         mqtt_publish(&conn, NULL, pub_topic, (uint8_t *)app_buffer,
                 strlen(app_buffer), MQTT_QOS_LEVEL_0, MQTT_RETAIN_OFF);
         #endif

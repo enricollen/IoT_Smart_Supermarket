@@ -13,7 +13,10 @@ logger = logging.getLogger("COAPModule")
 from COAP.const import NO_CHANGE, bold, FRIDGE_TEMPERATURE_SENSOR
 
 CURRENT_TEMP_KEY = "temperature"
+DESIRED_TEMP_KEY = "desired_temp"
 NOW_KEY = "timestamp"
+
+DEFAULT_DESIRED_TEMP = 0.0
 
 class FridgeTempSensor(MqttClient, Node):
 
@@ -22,6 +25,7 @@ class FridgeTempSensor(MqttClient, Node):
 
     node_ts_in_seconds = -1
     current_temp = ""
+    desired_temp = DEFAULT_DESIRED_TEMP
 
     kind = FRIDGE_TEMPERATURE_SENSOR
 
@@ -59,17 +63,21 @@ class FridgeTempSensor(MqttClient, Node):
         except Exception as e:
             logger.critical("exception during update_state_from_json | json = " + str(msg.payload))
             raise(e)
-        #--------------------------
-        self.update_last_seen()
-        #--------------------------
+        
         if ret == NO_CHANGE:
             logger.info("[" + self.node_id +"]["+ self.class_style(self.__class__.__name__ + ".parse_state_response") + "]: no change")
+            #--------------------------
+            self.update_last_seen()
+            #--------------------------
             return self
         elif ret == False:
             return False
         elif ret:
             self.save_current_state()
             logger.info("[" + self.node_id +"]["+ self.class_style(self.__class__.__name__ + ".parse_state_response") + "]: new node state set: " + bold( str(msg.payload) ) )
+            #--------------------------
+            self.update_last_seen()
+            #--------------------------
             return self
 
         return
@@ -80,10 +88,12 @@ class FridgeTempSensor(MqttClient, Node):
         try:
             #here we try to parse the excepted values from json object. If something is missing, we should raise an error
             if (self.current_temp == json[CURRENT_TEMP_KEY] and
-                self.node_ts_in_seconds == json[NOW_KEY]):
+                self.node_ts_in_seconds == json[NOW_KEY] and
+                self.desired_temp == json[DESIRED_TEMP_KEY]):
                 no_change = True
 
             self.current_temp = json[CURRENT_TEMP_KEY]
+            self.desired_temp = json[DESIRED_TEMP_KEY]
             self.node_ts_in_seconds = json[NOW_KEY]
         
         except:
@@ -98,8 +108,8 @@ class FridgeTempSensor(MqttClient, Node):
 
     def save_current_state(self):
         conn = DatabaseConnection()
-        sql = "INSERT INTO fridge_temperatures(node_id, timestamp, node_ts_in_seconds, temperature) VALUES(%s, NOW(), %s, %s)"
-        params = (self.node_id, self.node_ts_in_seconds, self.current_temp)
+        sql = "INSERT INTO fridge_temperatures(node_id, timestamp, node_ts_in_seconds, temperature, desired_temp) VALUES(%s, NOW(), %s, %s, %s)"
+        params = (self.node_id, self.node_ts_in_seconds, self.current_temp, self.desired_temp)
         conn.cursor.execute(sql, params)
         conn.dbConn.commit()
 
@@ -107,9 +117,9 @@ class FridgeTempSensor(MqttClient, Node):
 """
 TABLE NAME: fridge_temperatures
 
-+------------+----------+----------+--------------------+-------------------+
-|     ID     | node_id  |  now()   | node_ts_in_seconds |    temperature    |
-+------------+----------+----------+--------------------+-------------------+
++------------+----------+----------+--------------------+-------------------+-------------------+
+|     ID     | node_id  |  now()   | node_ts_in_seconds |    temperature    |   desired_temp    |
++------------+----------+----------+--------------------+-------------------+-------------------+
 
 DROP TABLE IF EXISTS `fridge_temperatures`;
 
@@ -119,6 +129,7 @@ CREATE TABLE `fridge_temperatures` (
   `timestamp` timestamp NOT NULL DEFAULT current_timestamp(),
   `node_ts_in_seconds` INT NOT NULL COMMENT 'seconds since last node restart',
   `temperature` float NOT NULL,
+  `desired_temp` float NOT NULL,
   PRIMARY KEY (`ID`)
 ) ENGINE=InnoDB AUTO_INCREMENT=277 DEFAULT CHARSET=utf8mb4;
 

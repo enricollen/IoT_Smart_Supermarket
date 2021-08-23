@@ -28,6 +28,7 @@ CREATE TABLE `fridge_temperatures` (
   `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `node_ts_in_seconds` int(11) NOT NULL COMMENT 'seconds since last node restart',
   `temperature` float NOT NULL,
+  `desired_temp` float NOT NULL,
   PRIMARY KEY (`ID`)
 ) ENGINE=InnoDB AUTO_INCREMENT=305 DEFAULT CHARSET=utf8mb4;
 /*!40101 SET character_set_client = @saved_cs_client */;
