@@ -137,6 +137,7 @@ class Collector:
     
     def remove_scale_device(self, node_id):
         obj = self.all_devices[node_id]
+        assert isinstance(obj, ScaleDevice), "[remove_scale_device]: the obj was supposed to be an instance of ScaleDevice"
         node_ip = self.all_devices[node_id].ip_address
         #here we check if this price-display was bounded with a scale device
         self.unbind_price_and_scale(obj)
@@ -255,7 +256,8 @@ class Collector:
         try:
             action[node_kind](node_id)
         except Exception as e:
-            logger.warning("Cannot remove node! node_kind = " + node_kind)
+            logger.warning("Cannot remove node! node_kind = " + node_kind + " | node_id = " + node_id)
+            traceback.print_exc()
             return False
 
         del self.all_devices[node_id]

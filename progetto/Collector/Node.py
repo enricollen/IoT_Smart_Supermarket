@@ -68,7 +68,8 @@ class Node:
 
     def prompt_the_collector_to_delete_this(self):
         #a proper collector method to delete the node from the connected node list to be called from here
-        Collector.collector.remove_node(self.node_id)
+        Collector.collector.remove_node(node_id = self.node_id)
+        del self
         return
 
     #--------------------------------------------------------------------
