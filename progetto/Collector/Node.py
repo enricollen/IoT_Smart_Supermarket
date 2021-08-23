@@ -36,17 +36,29 @@ class Node:
         if self.is_mqtt_node():
             logger.debug("MQTT node timed out!")
             self.prompt_the_collector_to_delete_this()
-        else:   #if it is CoAP node
+        elif issubclass(self.__class__, COAP.COAP_Model.COAPModel):
+            #if it is CoAP node
             #we should make a GET request and check if we receive a response,
             #in case we receive nothing, the node should be deleted!
-            if issubclass(self.__class__, COAP.COAP_Model.COAPModel):
-                outcome = self.get_current_state()
-                if outcome:
-                    self.update_last_seen()
-                else:
-                    self.prompt_the_collector_to_delete_this()
+            outcome = self.get_current_state()
+            if outcome:
+                self.update_last_seen()
+            else:
+                self.prompt_the_collector_to_delete_this()
+        elif self.is_multi_resources_node():
+            outcome = self.get_resources_state()
+            if outcome:
+                self.update_last_seen()
+            else:
+                self.prompt_the_collector_to_delete_this()
+        else:
+            logger.warning("[check presence]: unhandled kind of node!")
+
 
         return
+
+    def is_multi_resources_node(self):
+        return False
 
     def is_mqtt_node(self):
         if issubclass(self.__class__, MqttClient):
