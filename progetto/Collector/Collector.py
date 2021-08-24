@@ -105,7 +105,7 @@ class Collector:
         self.price_display_array.append(price_display)
 
         #logic for binding a weight sensor with correspondent price display
-        self.bind_price_and_scale(ip_addr_price_display=ip_addr, obj_price_display = price_display) 
+        self.bind_price_and_scale(obj_price_display = price_display) 
 
         return self
 
@@ -131,7 +131,7 @@ class Collector:
         self.shelf_scale_device_array.append(scale_device)
 
         #logic for binding a weight sensor with correspondent price display
-        self.bind_price_and_scale(ip_addr_scale_device=ip_addr,obj_scale_device = scale_device) 
+        self.bind_price_and_scale(obj_scale_device = scale_device) 
 
         return self
     
@@ -149,8 +149,8 @@ class Collector:
     spare_price_displays = [] 
     spare_scale_devices = []
 
-    def bind_price_and_scale(self, ip_addr_price_display="", obj_price_display = None, ip_addr_scale_device="", obj_scale_device = None):
-        if ip_addr_price_display!="" and obj_price_display: #we want to bind price display with a spare scale device
+    def bind_price_and_scale(self, obj_price_display = None, obj_scale_device = None):
+        if obj_price_display: #we want to bind price display with a spare scale device
             if len(self.spare_scale_devices)==0:
                 self.spare_price_displays.append(obj_price_display)
                 return
@@ -162,7 +162,7 @@ class Collector:
                 obj_price_display.bind_scale_device(obj_scale_device)
                 self.coupled_scale_and_price.append([obj_scale_device, obj_price_display])
 
-        elif ip_addr_scale_device!="" and obj_scale_device: #we want to bind scale device with a spare price display
+        elif obj_scale_device: #we want to bind scale device with a spare price display
             if len(self.spare_price_displays)==0:
                 self.spare_scale_devices.append(obj_scale_device)
                 return
