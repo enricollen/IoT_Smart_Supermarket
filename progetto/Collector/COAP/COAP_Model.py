@@ -1,6 +1,7 @@
 from DatabaseConnection import DatabaseConnection
 from coapthon.client.helperclient import HelperClient
 from coapthon import defines
+from coapthon.messages.message import Message
 from abc import ABC, abstractmethod
 import json
 
@@ -11,6 +12,8 @@ logger = logging.getLogger("COAPModule")
 
 from COAP.const import NO_CHANGE, DEFAULT_STYLE, YELLOW_STYLE, CANNOT_PARSE_JSON, bold
 DEFAULT_COAP_PORT = 5683
+
+DEFAULT_TIMEOUT = 20 #in seconds
 
 import Node
 
@@ -44,7 +47,7 @@ class COAPModel:
         #implement COAPthon method to register as observer and bind observe_handler to handle notifies
         #logger.debug("[start_observing]: begin")
         self.observer_client = HelperClient(server=(self.ip_address, DEFAULT_COAP_PORT))
-        self.observer_client.observe(self.resource_path, self.observe_handler)
+        self.observer_client.observe(self.resource_path, self.observe_handler, timeout = DEFAULT_TIMEOUT)
         #client.stop()  #DO NOT STOP THE OBSERVER CLIENT
         return self
 
@@ -104,7 +107,7 @@ class COAPModel:
 
     def get_current_state(self):
         client = HelperClient(server=(self.ip_address, DEFAULT_COAP_PORT))
-        response = client.get(self.resource_path)
+        response = client.get(self.resource_path, timeout=DEFAULT_TIMEOUT)
         client.stop()
         return self.parse_state_response(response)
 
@@ -117,8 +120,15 @@ class COAPModel:
             #message is instance of the class Message in CoAPthon
             #it has the attributes code, payload, etc...
             #we want to check the result code and the response payload
-            if message.code == defines.Codes.BAD_REQUEST.number:
-                logger.warning("[!] set_new_values error: bad request | response payload : " + str(message.payload))
+            is_message = isinstance(message, Message)
+            is_bad_request = False
+            if is_message:
+                is_bad_request = message.code == defines.Codes.BAD_REQUEST.number
+            if not is_message or is_bad_request:
+                payload = None
+                if is_message:
+                    payload = str(message.payload)
+                logger.warning("[!] set_new_values error: bad request | response payload : " + str(payload) )
                 #consider if removing the node or invoking some checks on that node
             else:
                 logger.debug("set_new_values: received node response = " + str(message.payload))
@@ -129,7 +139,7 @@ class COAPModel:
             callback = default_callback
 
         client = HelperClient(server=(self.ip_address, DEFAULT_COAP_PORT))
-        response = client.post(self.resource_path, req_body, callback=callback)
+        response = client.post(self.resource_path, req_body, callback=callback, timeout=DEFAULT_TIMEOUT)
         client.stop()
         return
 
