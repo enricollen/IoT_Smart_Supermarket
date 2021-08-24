@@ -84,7 +84,7 @@ class MqttClient:
 
     def close(self):
         if( isinstance(self.client, mqtt.Client)):
-            logger.info("Stopping mqtt.Client instance self.client")
+            logger.info("["+self.__class__.__name__+"]"+"Stopping mqtt.Client instance self.client")
             try:
                 self.client.loop_stop()
             except Exception as e:
@@ -92,6 +92,7 @@ class MqttClient:
                 print(e)
             else:
                 del self.client
+                logger.info("["+self.__class__.__name__+"]"+"stopped mqtt.Client instance self.client")
         return
 
     def __del__(self):

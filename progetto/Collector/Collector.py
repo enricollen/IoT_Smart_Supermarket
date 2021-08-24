@@ -115,6 +115,10 @@ class Collector:
         #here we check if this price-display was bounded with a scale device
         self.unbind_price_and_scale(obj)
         self.price_display_array.remove(obj)    #node_ip
+        node = self.coap_devices[node_ip]
+        assert isinstance(node, PriceDisplay)
+        node.delete()
+        del node
         del self.coap_devices[node_ip]
         return
 
@@ -142,6 +146,10 @@ class Collector:
         #here we check if this price-display was bounded with a scale device
         self.unbind_price_and_scale(obj)
         self.shelf_scale_device_array.remove(obj)   #node_ip
+        obj = self.coap_devices[node_ip]
+        assert isinstance(obj, ScaleDevice)
+        obj.delete()
+        del obj
         del self.coap_devices[node_ip]
         return
 
@@ -183,7 +191,8 @@ class Collector:
             if obj in couple:
                 found = True
                 self.coupled_scale_and_price.remove(couple)
-                couple.pop(obj)
+                assert isinstance(couple, list)
+                couple.remove(obj)
                 spare_obj = couple.pop()
                 #we want to know the kind of this obj and add it to the correct spare_array
                 if spare_obj.kind == PRICE_DISPLAY:
@@ -253,6 +262,8 @@ class Collector:
             SHELF_SCALE: self.remove_scale_device
         }
 
+        logger.debug("going to delete node " + node_id + " | kind = " + node_kind)
+
         try:
             action[node_kind](node_id)
         except Exception as e:
@@ -262,10 +273,12 @@ class Collector:
 
         del self.all_devices[node_id]
 
+        logger.debug("just deleted node " + node_id + " | kind = " + node_kind)
+
         return True
 
     def close(self):
-        node_ids = self.all_devices.keys()
+        node_ids = list( self.all_devices.keys() )
         for node_id in node_ids:
             self.remove_node(node_id=node_id)
         

@@ -90,6 +90,15 @@ class PriceDisplay(COAPModel, Node):
 
         self.linked_scale_device = scale_obj
 
+    def delete(self):
+        logger.debug("PriceDisplay id " + self.node_id + " beeing deallocated!")
+        self.delete_thread()
+        super().__del__()
+
+    def __del__(self):
+        self.delete()
+        
+
 """
 TABLE NAME: price_display_state
 

@@ -13,7 +13,7 @@ logger = logging.getLogger("Node_Class")
 logger.setLevel(level=logging.DEBUG)
 
 
-CHECK_PRESENCE_INTERVAL = 100 #in seconds
+CHECK_PRESENCE_INTERVAL = 30 #in seconds
 
 class Node:
     node_id = False
@@ -32,7 +32,7 @@ class Node:
         return True
 
     def check_presence(self):
-        logger.debug("Checking if the node " + str(self.node_id) + " | kind: " + self.kind + " is still present")
+        logger.debug("Checking if the node " + str(self.node_id) + " | kind: " + self.kind + " is still connected")
         if self.is_mqtt_node():
             logger.debug("MQTT node timed out!")
             self.prompt_the_collector_to_delete_this()
@@ -41,9 +41,11 @@ class Node:
             #we should make a GET request and check if we receive a response,
             #in case we receive nothing, the node should be deleted!
             outcome = self.get_current_state()
-            if outcome:
+            if outcome and outcome != -1:
+                logger.debug("The node "+ str(self.node_id) +" is still connected")
                 self.update_last_seen()
             else:
+                logger.debug("cannot connect to the node! going to delete this instance")
                 self.prompt_the_collector_to_delete_this()
         elif self.is_multi_resources_node():
             outcome = self.get_resources_state()
@@ -85,7 +87,11 @@ class Node:
         self.create_presence_checker_thread()
         return
     
-    def __del__(self):
+    def delete_thread(self):
         if isinstance(self.thread, Timer):
+            logger.debug("Going to delete connection checker thread for node " + self.node_id)
             self.thread.cancel()
-        del self.thread
+            logger.debug("deleted connection checker thread for node " + self.node_id)   
+
+    def __del__(self):
+        self.delete_thread()

@@ -133,6 +133,7 @@ class ScaleDevice(Node):
         if isinstance(self.refill_sensor, RefillSensor):
             self.refill_sensor.delete()
             del self.refill_sensor
+        self.delete_thread()
 
     def __del__(self):
         self.delete()
