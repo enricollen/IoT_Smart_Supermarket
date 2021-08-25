@@ -63,7 +63,7 @@ class COAPModel:
     
     def new_message_from_the_node(self):
         #---------------------------
-        if issubclass(self.__class__, Node.Node):
+        if isinstance(self, Node.Node):
             self.update_last_seen()
         #else if it is not a Node istance, it is a resource of a multiresources Node, in that case the update_last_seen should be handled by the wrapper class
         #---------------------------

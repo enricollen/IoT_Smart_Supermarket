@@ -5,6 +5,8 @@ from COAP.RefillSensor import RefillSensor
 import logging
 logger = logging.getLogger("COAPModule")
 
+import datetime
+
 from COAP.const import SHELF_SCALE
 from Node import Node
 
@@ -54,8 +56,17 @@ class ScaleDevice(Node):
         1c. A product has a terrible selling ratio if num_of_shelf_refills / hour is less than 10
         2a. A product can increase its price until 30% more than the initial price
         2b. A product can decrease its price until 60% less than the initial price
+        3a. Do not change the price of a product, if it has changed recently (if price_obj.last_price_change is in the last 30 minutes)
 
         """
+        CHANGE_THRESHOLD = 30 * 60  #30 minutes times 60 to obtain the value in seconds
+
+        time_diff = datetime.datetime.now() - price_obj.last_price_change
+
+        assert isinstance(time_diff, datetime.timedelta)
+        if(time_diff.total_seconds() < CHANGE_THRESHOLD):
+            return
+
         number_of_hours = seconds_since_begin / 3600
 
         if( (num_of_shelf_refills / number_of_hours) > 200):

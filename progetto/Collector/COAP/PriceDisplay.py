@@ -25,7 +25,7 @@ NAME_STYLE = BLUE_STYLE
 class PriceDisplay(COAPModel, Node):
     
     current_price = DEFAULT_PRICE
-    last_price_change = -1
+    last_price_change = -1  #it is a datetime
     linked_scale_device = ""
     initial_price = -1  #we will use that for the price ranges
 
@@ -81,7 +81,12 @@ class PriceDisplay(COAPModel, Node):
         
         req_body = 'new_price='+str(new_price)
 
-        return self.set_new_values(req_body, use_default_callback=True)
+        ret = self.set_new_values(req_body, use_default_callback=True)
+
+        #so that we update the state of the PriceDisplay object by the collector side
+        self.get_current_state()
+
+        return ret
     
     def bind_scale_device(self, scale_obj):
         if(self.linked_scale_device!=""):

@@ -9,6 +9,9 @@ NO_CHANGE = "fenom"
 
 CANNOT_PARSE_JSON = "landrier"
 
+COAP_CONNECTION = "COAP"
+MQTT_CONNECTION = "MQTT"
+
 #----------------------------------------------
 
 
@@ -61,3 +64,19 @@ def red(string):
 
 def blue(string):
     return BLUE_COLOR + string + DEFAULT_COLOR
+
+def purple(string):
+    return PURPLE_COLOR + string + DEFAULT_COLOR
+
+def colored_print_kind(string):
+    """
+    Expects as input one of the valid kind, returns the given string colored if it is a valid kind
+    """
+    options = {
+        SHELF_SCALE : purple,
+        FRIDGE_TEMPERATURE_SENSOR: blue,
+        PRICE_DISPLAY : green
+    }
+    if string in options:
+        string = options[string](string)
+    return string
