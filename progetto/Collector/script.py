@@ -15,6 +15,7 @@ from COAP.const import blue
 
 from MQTT.MqttDiscoverer import MQTTDiscoverer
 
+from CommandPrompt import CommandPrompt
 
 import logging
 import sys
@@ -50,6 +51,7 @@ def boot_logo():
         88      YP   YP  `Y88P' Y888888P  `Y88P'  Y88888P Y88888P Y88888P VP   V8P
     """) )
 
+
 server = CoAPServer(COAP_SERVER_IP, COAP_SERVER_PORT)
 
 try:
@@ -62,9 +64,9 @@ try:
         logger.critical("Cannot start MQTT Discovery")
         print(e)
 
-    server.listen(10)
+    command_prompt = CommandPrompt()
 
-    
+    server.listen(10)
 
 except KeyboardInterrupt:
     print("\nServer Shutdown")
@@ -85,5 +87,4 @@ except KeyboardInterrupt:
                                                              
     --------------------------------------------------------------------
     """)
-    exit()
-    
+    exit()    

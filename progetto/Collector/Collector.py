@@ -5,6 +5,7 @@ from COAP.ScaleDevice import ScaleDevice
 
 from MQTT.FridgeTempSensor import FridgeTempSensor
 
+from Node import Node
 
 from COAP.const import *
 
@@ -276,6 +277,26 @@ class Collector:
         logger.debug("just deleted node " + node_id + " | kind = " + node_kind)
 
         return True
+    
+    #----------------------------------------------------------------------------
+
+    def list_devices(self, requested_kind = "any"):
+
+        devices = {}
+
+        for device_id in self.all_devices.keys():
+            device_obj = self.all_devices[device_id]
+            assert issubclass(device_obj.__class__, Node)
+            device_kind = device_obj.kind
+
+            if requested_kind != "any" and device_kind != requested_kind:
+                continue    #in that way we can return only the nodes of a certain kind
+
+            devices[device_id] = device_kind
+
+        return devices 
+
+    #----------------------------------------------------------------------------
 
     def close(self):
         node_ids = list( self.all_devices.keys() )
