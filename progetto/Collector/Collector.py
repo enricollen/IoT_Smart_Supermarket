@@ -3,6 +3,9 @@ import traceback
 from COAP.PriceDisplay import PriceDisplay
 from COAP.ScaleDevice import ScaleDevice
 
+from MQTT.MqttClient import MqttClient
+from COAP.COAP_Model import COAPModel
+
 from MQTT.FridgeTempSensor import FridgeTempSensor
 
 from Node import Node
@@ -294,7 +297,98 @@ class Collector:
 
             devices[device_id] = device_kind
 
-        return devices 
+        return devices
+
+    def list_couples(self):
+        """
+        return an array of array made of two strings, 
+        the first is the node_id of ScaleDevice, the latter is the node_id of PriceDisplay
+        - [
+        -    ["node_id of ScaleDevice1", "node_id of PriceDisplay1"],
+        -    ["node_id of ScaleDevice2", "node_id of PriceDisplay2"]
+        -]
+        """
+        couples = []
+        #[[Scale1, Price1], [Scale2, Price2]]
+        for couple in self.coupled_scale_and_price:
+            scale_device_obj = couple[0]
+            assert isinstance(scale_device_obj, ScaleDevice)
+            price_display_obj = couple[1]
+            assert isinstance(price_display_obj, PriceDisplay)
+            row = [str(scale_device_obj.node_id), str(price_display_obj.node_id)]
+            couples.append(row)
+        return couples
+
+    def list_spare_devices(self, desired_kind = "any"):
+        """
+        returns a dict node_id : KIND of all the spare devices if no desired_kind is specified, else returns only the devices of the specified kind
+        """
+        devices_info = {}
+
+        if(desired_kind == "any" or desired_kind == SHELF_SCALE):
+            for shelf_scale_obj in self.spare_scale_devices:
+                assert isinstance(shelf_scale_obj, ScaleDevice)
+                shelf_node_id = shelf_scale_obj.node_id
+                devices_info[shelf_node_id] = shelf_scale_obj.kind
+
+        if(desired_kind == "any" or desired_kind == PRICE_DISPLAY):
+            for price_display_obj in self.spare_price_displays:
+                assert isinstance(price_display_obj, PriceDisplay)
+                price_display_node_id = price_display_obj.node_id
+                devices_info[price_display_node_id] = price_display_obj.kind
+        
+        return devices_info
+
+    def node_info(self, node_id):
+        """
+        returns the infos about the connected node of specified id node_id
+        - if there is no connected device with that node_id, it returns False
+        - it returns a dict with the following keys:
+        - "node-id"
+        - "node-ip"
+        - "type-of-connection"
+        - "kind"
+        """
+        
+        if node_id not in self.all_devices.keys():
+            return False
+
+        node_obj = self.all_devices[node_id]
+
+        assert isinstance(node_obj, Node)
+
+        infos = {}
+
+        infos["node-id"] = node_id
+        infos["kind"]    = node_obj.kind
+        if isinstance(node_obj, ScaleDevice) or isinstance(node_obj, COAPModel):
+            infos["type-of-connection"] = COAP_CONNECTION
+            infos["node-ip"] = node_obj.ip_address
+        elif isinstance(node_obj, MqttClient):
+            infos["type-of-connection"] = MQTT_CONNECTION
+            infos["node-ip"] = None
+        else:
+            infos["type-of-connection"] = "unrecognized"
+            infos["node-ip"] = None
+
+        return infos
+
+    def get_current_price(self, node_id):
+        price_obj = self.all_devices[node_id]
+        if not isinstance(price_obj, PriceDisplay):
+            return False
+        else:
+            assert isinstance(price_obj, PriceDisplay)
+            return price_obj.current_price
+
+    def set_new_price(self, node_id, new_price):
+        price_obj = self.all_devices[node_id]
+        if not isinstance(price_obj, PriceDisplay):
+            return False
+        else:
+            assert isinstance(price_obj, PriceDisplay)
+            price_obj.set_new_price(new_price=new_price)
+            return True
 
     #----------------------------------------------------------------------------
 

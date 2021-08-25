@@ -5,7 +5,7 @@ logger.setLevel(logging.DEBUG)
 
 from threading import Thread
 
-from COAP.const import KINDS_LIST, PRICE_DISPLAY, SHELF_SCALE, FRIDGE_TEMPERATURE_SENSOR, green, blue, red
+from COAP.const import KINDS_LIST, PRICE_DISPLAY, SHELF_SCALE, FRIDGE_TEMPERATURE_SENSOR, green, blue, red, bold, colored_print_kind
 
 from Collector import collector
 
@@ -137,26 +137,127 @@ class CommandPrompt:
             assert isinstance(nodes_info, dict)
             nodes_info = dict(sorted(nodes_info.items(), key=lambda item: item[1]))
             print("list of all the connected nodes")
+            print("NodeID\t\t\tNode Kind")
 
         #now in nodes_info we have a dict made in this way--- "node_id" : "kind"
         assert isinstance(nodes_info, dict)
 
         for node_id in nodes_info:
-            row = node_id + "\t\t\t" + nodes_info[node_id]
+            row = bold(node_id) + "\t\t\t" + colored_print_kind(nodes_info[node_id])
             print(row)
 
         return
 
     def list_couples(self, param):
+        """
+        list-couples                -> lists all the PriceDisplay - ScaleDevice couples
+        list-couples  --spare       -> lists all the PriceDisplay / ScaleDevice spare nodes
+        list-couples  --spare KIND  -> lists all the spare nodes of specific kind
+        """
+        ALLOWED_OPTIONS = ["--spare"]
+
+        assert isinstance(param, list)
+        if(len(param)):
+            #the case in which the user has wrote some parameter after the command
+            option = param[0]
+            if option not in ALLOWED_OPTIONS:
+                print("[!] list command: unrecognised option '" + option +"'!")
+                return
+            else:
+                #if it is a recognised option
+                desired_kind = "any"
+
+                print_condition = ""
+
+                if len(param) > 1:
+                    #we expect a specific kind as second parameter
+                    desired_kind = param[1]
+                    ALLOWED_KINDS = [SHELF_SCALE, PRICE_DISPLAY]
+                    if desired_kind not in ALLOWED_KINDS:
+                        print("[!] list-couples --spare command: kind '" + desired_kind +"' not allowed!")
+                        print("[+] allowed kinds: " + str(ALLOWED_KINDS).replace('[','').replace(']',''))
+                        return
+                    print_condition = " of kind '"+colored_print_kind(desired_kind)+"'"
+                
+                nodes_info = collector.list_spare_devices(desired_kind = desired_kind)
+                print("list of spare devices"+print_condition+":\n")
+            
+            #now in nodes_info we have a dict made in this way--- "node_id" : "kind"
+            assert isinstance(nodes_info, dict)
+            #sort by kind:
+            nodes_info = dict(sorted(nodes_info.items(), key=lambda item: item[1]))
+
+            for node_id in nodes_info:
+                row = node_id + "\t\t\t" + colored_print_kind(nodes_info[node_id])
+                print(row)
+
+
+        else:
+            #we want to list the node couples
+            couples = collector.list_couples()
+            print("list of all the couples:\n")
+            print("ShelfScale\t\t\tPriceDisplay")
+            #TO DO: method to print the couples
+            for couple in couples:
+                print(couple[0] + "\t\t\t\t" + couple[1])
+
+        print()
         return
 
     def show_price(self, param):
+        """
+        show-price ID               -> if ID is the ID of a PriceDisplay, returns the current_price shown by that node
+        """
+        if(len(param) < 1):
+            print("[!] please specify a nodeID!")
+            return
+        target_node_id = param[0]
+        node_infos = collector.node_info(target_node_id)
+        if(node_infos == False):
+            print("[!] the ID " + target_node_id + " does not identify any connected node!")
+            return
+        if(node_infos["kind"] != PRICE_DISPLAY):
+            print("[!] the node of ID " + target_node_id + " is not a PriceDisplay!")
+            return
+        current_price = collector.get_current_price(node_id = target_node_id)
+
+        if current_price == False:
+            print("[!]get_current_price: an error occurred in the collector")
+            return
+        else:
+            print("The current price for the node of ID " + target_node_id + " is " + str(current_price))
+
         return
 
     def show_prices(self, param):
+        """
+        show-prices                 -> returns the current_price for each PriceDisplay node
+        """
         return
 
     def set_price(self, param):
+        assert isinstance(param, list)
+        if len(param) < 2:
+            print("[!] set-price: missing parameter!")
+            print("[+] set-price expected syntax: set-price NODE-ID DESIRED-PRICE")
+            return
+        target_node_id = param[0]
+        #here we have to check that the specified node_id is actually a node_id of a connected PriceDisplay
+        node_infos = collector.node_info(target_node_id)
+        if(node_infos == False):
+            print("[!] the ID " + target_node_id + " does not identify any connected node!")
+            return
+        if(node_infos["kind"] != PRICE_DISPLAY):
+            print("[!] the node of ID " + target_node_id + " is not a PriceDisplay!")
+            return
+        
+        new_desired_price = float(param[1])
+
+        ret = collector.set_new_price(node_id=target_node_id, new_price=new_desired_price)
+
+        if not ret:
+            print("[!]set_price: an error occurred in the collector")
+
         return
 
     def temp_info(self, param):
@@ -175,10 +276,20 @@ class CommandPrompt:
         return
 
     def info(self, param):
+        if(len(param) < 1):
+            print("[!] please specify a nodeID!")
+            return
+        target_node_id = param[0]
+        node_infos = collector.node_info(target_node_id)
+        if(node_infos == False):
+            print("[!] the ID " + target_node_id + " does not identify any connected node!")
+            return
+        print(str(node_infos))
         return
 
     def close(self, param):
-        stop_collector()
+        print("not implemented. Please press CTRL + C")
+        #stop_collector()
         #raise KeyboardInterrupt
 
     
