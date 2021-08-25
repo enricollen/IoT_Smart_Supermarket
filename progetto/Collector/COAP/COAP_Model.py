@@ -140,6 +140,10 @@ class COAPModel:
 
         client = HelperClient(server=(self.ip_address, DEFAULT_COAP_PORT))
         response = client.post(self.resource_path, req_body, callback=callback, timeout=DEFAULT_TIMEOUT)
+        #sometimes this post request throws an exception ------------ // cannot join thread before it is started
+        #as a workaround we call a sleep before the stop method
+        import time
+        time.sleep(0.1)
         client.stop()
         return
 
