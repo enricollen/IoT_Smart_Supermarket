@@ -17,6 +17,25 @@ from MQTT.MqttDiscoverer import MQTTDiscoverer
 
 
 import logging
+import sys
+
+log_format = "%(asctime)s - %(threadName)-10s - %(name)s - %(levelname)s - %(message)s"
+log_file = "log.txt"
+
+root_logger = logging.getLogger()
+
+lhStdout = root_logger.handlers[0]  # stdout is the only handler initially
+
+output_file_handler = logging.FileHandler(log_file)
+
+formatter = logging.Formatter(log_format)
+
+output_file_handler.setFormatter(formatter)
+output_file_handler.setLevel(logging.DEBUG)
+
+root_logger.addHandler(output_file_handler)
+
+root_logger.removeHandler(lhStdout)
 
 logger = logging.getLogger(__file__)
 logger.setLevel(level=logging.DEBUG)
@@ -45,14 +64,26 @@ try:
 
     server.listen(10)
 
+    
+
 except KeyboardInterrupt:
     print("\nServer Shutdown")
     server.close()
     mqttdiscoverer.close()
-    #I think that the cause for the program to not closing is that some COAP_Models do observe certain topic and they keep some COAPthon clients opened
     collector.close()
 
     #mqtt_client.close()
     print("Exiting...")
+    logger.info("""
+
+        __________   ___  __  .___________. __  .__   __.   _______ 
+        |   ____\  \ /  / |  | |           ||  | |  \ |  |  /  _____|
+        |  |__   \  V  /  |  | `---|  |----`|  | |   \|  | |  |  __  
+        |   __|   >   <   |  |     |  |     |  | |  . `  | |  | |_ | 
+        |  |____ /  .  \  |  |     |  |     |  | |  |\   | |  |__| | 
+        |_______/__/ \__\ |__|     |__|     |__| |__| \__|  \______| 
+                                                             
+    --------------------------------------------------------------------
+    """)
     exit()
     
