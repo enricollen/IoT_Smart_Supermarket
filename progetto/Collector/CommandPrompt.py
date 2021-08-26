@@ -261,12 +261,72 @@ class CommandPrompt:
         return
 
     def temp_info(self, param):
+        """
+        temp-info ID               -> if ID is the ID of a FridgeTempSensor, returns the current_temp acquired by that node
+        """
+        if(len(param) < 1):
+            print("[!] please specify a nodeID!")
+            return
+        target_node_id = param[0]
+        node_infos = collector.node_info(target_node_id)
+        if(node_infos == False):
+            print("[!] the ID " + target_node_id + " does not identify any connected node!")
+            return
+        if(node_infos["kind"] != FRIDGE_TEMPERATURE_SENSOR):
+            print("[!] the node of ID " + target_node_id + " is not a FridgeTempSensor!")
+            return
+        fridge_infos = collector.get_fridge_sensor_info(node_id = target_node_id)
+
+        if fridge_infos == False:
+            print("[!]temp-info: an error occurred in the collector")
+            return
+        else:
+            print("The current temperature for the node of ID " + target_node_id + " is " + str(fridge_infos["current_temp"]))
+            print("The desired temperature for the node of ID " + target_node_id + " is " + str(fridge_infos["desired_temp"]))
         return
 
     def temp_infos(self, param):
+        """
+        temp_infos          ->  returns current temperature and desired temperature for each connected FridgeTemperatureSensor
+        """
+        print("list of all the FridgeTemperature nodes")
+        print("NodeID\t\t\tNode Current Temperature\t\t\tNode Desired Temperature")
+
+        fridge_devices_infos = collector.get_all_temperatures()
+        for node_id in fridge_devices_infos:
+            current_temp = fridge_devices_infos[node_id]["current_temp"]
+            desired_temp = fridge_devices_infos[node_id]["desired_temp"]
+            row = bold(node_id) + "\t\t\t\t" + blue(str(current_temp)) + "\t\t\t\t\t" + purple(str(desired_temp))
+            print(row)
+        
         return
     
     def set_desired_temp(self, param):
+        """
+        set-desired-temp ID value   -> if ID is the ID of a FridgeTemperatureSensor, set a new desired temperature for that node
+        """
+
+        assert isinstance(param, list)
+        if len(param) < 2:
+            print("[!] set_desired_temp: missing parameter!")
+            print("[+] set_desired_temp expected syntax: set-price NODE-ID DESIRED-TEMPERATURE")
+            return
+        target_node_id = param[0]
+        #here we have to check that the specified node_id is actually a node_id of a connected FridgeTemperatureSensor
+        node_infos = collector.node_info(target_node_id)
+        if(node_infos == False):
+            print("[!] the ID " + target_node_id + " does not identify any connected node!")
+            return
+        if(node_infos["kind"] != FRIDGE_TEMPERATURE_SENSOR):
+            print("[!] the node of ID " + target_node_id + " is not a FridgeTemperatureSensor!")
+            return
+        
+        new_desired_temp = float(param[1])
+
+        ret = collector.set_new_temperature(node_id=target_node_id, new_temp=new_desired_temp)
+
+        if not ret:
+            print("[!]set_desired_temperature: an error occurred in the collector")
         return
 
     def shelf_info(self, param):

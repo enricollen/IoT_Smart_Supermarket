@@ -1,3 +1,4 @@
+from datetime import datetime
 import paho.mqtt.client as mqtt
 
 from abc import ABC, abstractmethod
@@ -18,6 +19,7 @@ class MqttClient:
     sub_topic_array = []
     DEFAULT_SUB_TOPIC = DEFAULT_SUB_TOPIC
     name_style = CYAN_STYLE
+    last_publish_ack = None
 
     def __init__(self, sub_topics = []):    #sub_topics can be a list or a string of a single topic
 
@@ -31,6 +33,7 @@ class MqttClient:
         self.client = mqtt.Client()
         self.client.on_connect = self.on_connect
         self.client.on_message = self.on_message
+        self.client.on_publish = self.on_publish 
         
         connected = False
 
@@ -65,6 +68,14 @@ class MqttClient:
         else:
             logger.debug("Subscribing to default topic '" + self.DEFAULT_SUB_TOPIC +"'")
             client.subscribe(self.DEFAULT_SUB_TOPIC)
+
+    def publish(self, payload, topic):
+        ret = self.client.publish(topic,payload)
+        return ret
+
+    def on_publish(self, client,userdata,mid):             #create function for callback
+        logger.debug("[on_publish]: just received ack for mid="+str(mid))
+        self.last_publish_ack = datetime.now()
 
     @abstractmethod
     def on_message(self, client, userdata, msg):

@@ -113,6 +113,11 @@ class FridgeTempSensor(MqttClient, Node):
         conn.cursor.execute(sql, params)
         conn.dbConn.commit()
 
+    
+    def set_new_temp(self, new_temp):
+        ret = self.publish(new_temp, self.pub_topic)
+        return ret
+
 
 """
 TABLE NAME: fridge_temperatures

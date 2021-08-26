@@ -390,6 +390,47 @@ class Collector:
             price_obj.set_new_price(new_price=new_price)
             return True
 
+
+    def get_fridge_sensor_info(self, node_id):
+        """
+        returns a dict {"current_temp" : current_temp_value, "desired_temp" : desired_temp_value} of the FridgeTempSensor with ID = node_id
+        """
+        temp_obj = self.all_devices[node_id]
+        if not isinstance(temp_obj, FridgeTempSensor):
+            return False
+        else:
+            assert isinstance(temp_obj, FridgeTempSensor)
+            fridge_dict = {
+                    "current_temp":temp_obj.current_temp,
+                    "desired_temp":temp_obj.desired_temp
+            }
+            return fridge_dict
+
+    def get_all_temperatures(self):
+        """
+        returns a dict of dict node_id : {"current_temp" : current_temp_value, "desired_temp" : desired_temp_value} of all the FridgeTempSensor devices
+        """
+        fridge_devices_info = {}
+
+        for fridge_temp_obj in self.fridge_temp_sensor_array:
+                assert isinstance(fridge_temp_obj, FridgeTempSensor)
+                fridge_temp_node_id = fridge_temp_obj.node_id
+                fridge_dict = {
+                    "current_temp":fridge_temp_obj.current_temp,
+                    "desired_temp":fridge_temp_obj.desired_temp
+                }
+                fridge_devices_info[fridge_temp_node_id] = fridge_dict
+        
+        return fridge_devices_info
+
+    def set_new_temperature(self, node_id, new_temp):
+        temp_obj = self.all_devices[node_id]
+        if not isinstance(temp_obj, FridgeTempSensor):
+            return False
+        else:
+            assert isinstance(temp_obj, FridgeTempSensor)
+            temp_obj.set_new_temp(new_temp=new_temp)
+            return True
     #----------------------------------------------------------------------------
 
     def close(self):
