@@ -389,7 +389,7 @@ class Collector:
             assert isinstance(price_obj, PriceDisplay)
             price_obj.set_new_price(new_price=new_price)
             return True
-
+    
     def get_all_prices(self):
         """
         returns a dict node_id : current_price of all the PriceDisplay devices
@@ -443,6 +443,43 @@ class Collector:
             assert isinstance(temp_obj, FridgeTempSensor)
             temp_obj.set_new_temp(new_temp=new_temp)
             return True
+
+    def get_scale_info(self, node_id):
+        """
+        returns a dict {"current_weight" : current_weight_value, "number_of_refills" : number_of_refills_value,
+        "last_refill_ts" : last_refill_ts} of the ScaleDevice with ID = node_id
+        """
+        scale_obj = self.all_devices[node_id]
+        if not isinstance(scale_obj, ScaleDevice):
+            return False
+        else:
+            assert isinstance(scale_obj, ScaleDevice)
+            scale_dict = {
+                "current_weight":scale_obj.get_current_weight(),
+                "number_of_refills":scale_obj.get_number_of_refills(),
+                "last_refill_ts":scale_obj.get_last_refill_ts()
+            }
+            return scale_dict
+
+    def get_all_scales_infos(self):
+        """
+        returns a dict of dict node_id : {"current_weight" : current_weight_value, "number_of_refills" : number_of_refills_value,
+        "last_refill_ts" : last_refill_ts} of all the ScaleDevice devices
+        """
+        scale_devices_info = {}
+
+        for scale_obj in self.shelf_scale_device_array:
+                assert isinstance(scale_obj, ScaleDevice)
+                scale_obj_node_id = scale_obj.node_id
+                scales_dict = {
+                    "current_weight":scale_obj.get_current_weight(),
+                    "number_of_refills":scale_obj.get_number_of_refills(),
+                    "last_refill_ts":scale_obj.get_last_refill_ts()
+                }
+                scale_devices_info[scale_obj_node_id] = scales_dict
+        
+        return scale_devices_info
+
     #----------------------------------------------------------------------------
 
     def close(self):

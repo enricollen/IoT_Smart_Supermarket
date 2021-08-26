@@ -126,6 +126,9 @@ class ScaleDevice(Node):
         else:
             return False
 
+    def get_number_of_refills(self):
+        return self.refill_sensor.number_of_refills
+
     #------------------------------------------------------------------------------------------------------------------------
 
     def bind_price_display(self, price_display_obj):

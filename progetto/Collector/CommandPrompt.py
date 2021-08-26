@@ -5,7 +5,7 @@ logger.setLevel(logging.DEBUG)
 
 from threading import Thread
 
-from COAP.const import KINDS_LIST, PRICE_DISPLAY, SHELF_SCALE, FRIDGE_TEMPERATURE_SENSOR, green, blue, red, bold, colored_print_kind
+from COAP.const import KINDS_LIST, PRICE_DISPLAY, SHELF_SCALE, FRIDGE_TEMPERATURE_SENSOR, green, blue, purple, red, bold, colored_print_kind
 
 from Collector import collector
 
@@ -339,9 +339,42 @@ class CommandPrompt:
         return
 
     def shelf_info(self, param):
+        """
+        shelf-info ID               -> if ID is the ID of a ShelfScaleDevice, returns current weight, number of refills and last refill timestamp of that sensor
+        """
+        if(len(param) < 1):
+            print("[!] please specify a nodeID!")
+            return
+        target_node_id = param[0]
+        node_infos = collector.node_info(target_node_id)
+        if(node_infos == False):
+            print("[!] the ID " + target_node_id + " does not identify any connected node!")
+            return
+        if(node_infos["kind"] != SHELF_SCALE):
+            print("[!] the node of ID " + target_node_id + " is not a ShelfScaleDevice!")
+            return
+        shelf_scale_infos = collector.get_scale_info(node_id = target_node_id)
+
+        if shelf_scale_infos == False:
+            print("[!]shelf-info: an error occurred in the collector")
+            return
+        else:
+            print("The current weight for the node of ID " + target_node_id + " is " + str(shelf_scale_infos["current_weight"]))
+            print("The number of refills for the node of ID " + target_node_id + " is " + str(shelf_scale_infos["number_of_refills"]))
+            print("The last refill timestamp for the node of ID " + target_node_id + " is " + str(shelf_scale_infos["last_refill_ts"]))
         return
 
     def shelf_infos(self, param):
+        print("list of all the ShelfScaleDevice nodes")
+        print("NodeID\t\t\tCurrent Weight\t\t\tRefills Counter\t\t\tLast Refill")
+
+        scale_devices_infos = collector.get_all_scales_infos()
+        for node_id in scale_devices_infos:
+            current_weight = scale_devices_infos[node_id]["current_weight"]
+            number_of_refills = scale_devices_infos[node_id]["number_of_refills"]
+            last_refill_ts = scale_devices_infos[node_id]["last_refill_ts"]
+            row = bold(node_id) + "\t\t\t\t" + blue(str(current_weight)) + "\t\t\t\t" + purple(str(number_of_refills)) + "\t\t\t" + green(str(last_refill_ts))
+            print(row)
         return
 
     def info(self, param):
