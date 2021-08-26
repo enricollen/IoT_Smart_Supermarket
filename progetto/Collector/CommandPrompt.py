@@ -233,6 +233,15 @@ class CommandPrompt:
         """
         show-prices                 -> returns the current_price for each PriceDisplay node
         """
+
+        print("list of all the PriceDisplay nodes")
+        print("NodeID\t\t\tNode Current Price")
+
+        price_device_infos = collector.get_all_prices()
+        for node_id in price_device_infos:
+            row = bold(node_id) + "\t\t\t" + blue(str(price_device_infos[node_id]))
+            print(row)
+
         return
 
     def set_price(self, param):

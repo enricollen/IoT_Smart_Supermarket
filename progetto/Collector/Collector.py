@@ -390,6 +390,18 @@ class Collector:
             price_obj.set_new_price(new_price=new_price)
             return True
 
+    def get_all_prices(self):
+        """
+        returns a dict node_id : current_price of all the PriceDisplay devices
+        """
+        price_devices_info = {}
+
+        for price_obj in self.price_display_array:
+                assert isinstance(price_obj, PriceDisplay)
+                price_display_node_id = price_obj.node_id
+                price_devices_info[price_display_node_id] = price_obj.current_price
+        
+        return price_devices_info
 
     def get_fridge_sensor_info(self, node_id):
         """
