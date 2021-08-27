@@ -37,11 +37,9 @@ class FridgeTempSensor(MqttClient, Node):
         Node.__init__(self)
 
     def change_setpoint(self, new_setpoint):
-        #TO DO:
+        #DONE:
         #should publish a message on self.pub_topic in the appropriate format
-
-        #remember to call self.update_last_seen() if everything works
-        pass
+        return self.set_new_temp(new_setpoint)
 
     def on_message(self, client, userdata, msg):
         #TESTed:

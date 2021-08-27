@@ -97,8 +97,9 @@ class PriceDisplay(COAPModel, Node):
 
     def delete(self):
         logger.debug("PriceDisplay id " + self.node_id + " beeing deallocated!")
+        self.close_coap_connections()
         self.delete_thread()
-        super().__del__()
+        
 
     def __del__(self):
         self.delete()

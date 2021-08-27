@@ -141,6 +141,7 @@ class ScaleDevice(Node):
         self.linked_price_display = price_display_obj
 
     def delete(self):
+        logger.debug("ScaleDevice id " + self.node_id + " beeing deallocated!")
         if isinstance(self.weight_sensor, WeightSensor):
             self.weight_sensor.delete()
             del self.weight_sensor

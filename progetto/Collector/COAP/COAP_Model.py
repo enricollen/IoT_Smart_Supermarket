@@ -13,7 +13,7 @@ logger = logging.getLogger("COAPModule")
 from COAP.const import NO_CHANGE, DEFAULT_STYLE, YELLOW_STYLE, CANNOT_PARSE_JSON, bold
 DEFAULT_COAP_PORT = 5683
 
-DEFAULT_TIMEOUT = 20 #in seconds
+DEFAULT_TIMEOUT = 10 #in seconds
 
 import Node
 
@@ -155,15 +155,17 @@ class COAPModel:
     def save_current_state(self):
         pass
 
-    def delete(self):#method to call when you want to close the server
-        
+    def close_coap_connections(self):
         if self.observer_client:
             self.observer_client.close()
+            del self.observer_client
+
+    def delete(self):#method to call when you want to close the server
+        self.close_coap_connections()
 
     def __del__(self):  #class disruptor
         #self.observer_client.cancel_observing()
-        if self.observer_client:
-            self.observer_client.close()
+        self.delete()
 
     #---------------------------------------------
     def class_style(self, string):
