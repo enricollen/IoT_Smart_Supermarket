@@ -27,11 +27,14 @@
 /*---------------------------------------------------------------------------*/
 /* MQTT broker address. */
 #define MQTT_CLIENT_BROKER_IP_ADDR "fd00::1"
+#define CONFIG_IP_ADDR_STR_LEN   16 //64
 
 #define DISCOVERY_TOPIC "discovery"
 #define NODE_KIND "fridge_temp_sensor"
 
 static const char *broker_ip = MQTT_CLIENT_BROKER_IP_ADDR;
+
+char broker_address[CONFIG_IP_ADDR_STR_LEN];
 
 // Defaukt config values
 #define DEFAULT_BROKER_PORT         1883
@@ -68,7 +71,6 @@ AUTOSTART_PROCESSES(&mqtt_client_process);
 /*---------------------------------------------------------------------------*/
 /* Maximum TCP segment size for outgoing segments of our socket */
 #define MAX_TCP_SEGMENT_SIZE    32
-#define CONFIG_IP_ADDR_STR_LEN   64
 /*---------------------------------------------------------------------------*/
 /*
  * Buffers for Client ID and Topics.
@@ -297,7 +299,7 @@ PROCESS_THREAD(mqtt_client_process, ev, data)
   PROCESS_BEGIN();
   
   mqtt_status_t status;
-  char broker_address[CONFIG_IP_ADDR_STR_LEN];
+  //char broker_address[CONFIG_IP_ADDR_STR_LEN];
 
   printf("MQTT Client Process\n");
 
