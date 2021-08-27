@@ -9,6 +9,8 @@ logger.setLevel(level=logging.DEBUG)
 
 from COAP.const import CYAN_STYLE, DEFAULT_STYLE
 
+import Node
+
 BROKER_ADDRESS = "127.0.0.1"
 BROKER_PORT = 1883
 
@@ -64,7 +66,7 @@ class MqttClient:
                 client.subscribe(sub_topic)
                 topics += sub_topic + " | "
             
-            logger.debug("Subscribed to " + topics)
+            logger.debug("Subscribed to " + topics + "\t len(self.sub_topic_array) = " + str(len(self.sub_topic_array)))
         else:
             logger.debug("Subscribing to default topic '" + self.DEFAULT_SUB_TOPIC +"'")
             client.subscribe(self.DEFAULT_SUB_TOPIC)
@@ -104,6 +106,10 @@ class MqttClient:
             else:
                 del self.client
                 logger.info("["+self.__class__.__name__+"]"+"stopped mqtt.Client instance self.client")
+        
+        if( isinstance(self, Node.Node)):
+            self.delete_thread()
+        del self
         return
 
     def __del__(self):

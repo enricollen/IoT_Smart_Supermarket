@@ -121,9 +121,9 @@ class Collector:
         self.price_display_array.remove(obj)    #node_ip
         node = self.coap_devices[node_ip]
         assert isinstance(node, PriceDisplay)
+        del self.coap_devices[node_ip]
         node.delete()
         del node
-        del self.coap_devices[node_ip]
         return
 
     def register_new_scale_device(self, ip_addr):
@@ -152,9 +152,9 @@ class Collector:
         self.shelf_scale_device_array.remove(obj)   #node_ip
         obj = self.coap_devices[node_ip]
         assert isinstance(obj, ScaleDevice)
+        del self.coap_devices[node_ip]
         obj.delete()
         del obj
-        del self.coap_devices[node_ip]
         return
 
     #utility array to make binding process easier
@@ -247,7 +247,10 @@ class Collector:
         #check that the remove from temp_sensor_array works properly
         obj = self.mqtt_devices[node_id]
         self.fridge_temp_sensor_array.remove(obj)   #node_id
+        assert isinstance(obj, FridgeTempSensor)
+        obj.delete()
         del self.mqtt_devices[node_id]
+        del obj
         return
 
 #---------------------------------------------------------------------------------------------
@@ -257,6 +260,14 @@ class Collector:
         return True
 
     def remove_node(self, node_id, node_ip = None):
+
+        if node_id not in self.all_devices.keys():
+            logger.warning("Tried to remove an unregistered node! node_id = " + node_id)
+            return False
+
+        if not isinstance(self.all_devices[node_id], Node):
+            logger.warning("Tried to remove a device of node_id = " + node_id + " that is not connected anymore!")
+            return False
 
         node_kind = self.all_devices[node_id].kind
 

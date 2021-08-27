@@ -1,8 +1,11 @@
 from threading import Timer
 import datetime
+import sys
 
 from MQTT.MqttClient import MqttClient
 import COAP.COAP_Model
+
+from COAP.const import purple
 
 import Collector
 
@@ -71,27 +74,33 @@ class Node:
     def prompt_the_collector_to_delete_this(self):
         #a proper collector method to delete the node from the connected node list to be called from here
         Collector.collector.remove_node(node_id = self.node_id)
+        self.delete_thread()    #del self
         del self
+        sys.exit()
         return
 
     #--------------------------------------------------------------------
 
     def create_presence_checker_thread(self):
         self.thread = Timer(CHECK_PRESENCE_INTERVAL, self.check_presence)
+        self.thread.daemon = True   #in this way the thread terminates whenever the main program ends
         self.thread.start() # TO TEST
         return
 
     def reset_timer_presence_checker_thread(self):
         if isinstance(self.thread, Timer):
             self.thread.cancel()
+            del self.thread
         self.create_presence_checker_thread()
         return
     
     def delete_thread(self):
         if isinstance(self.thread, Timer):
-            logger.debug("Going to delete connection checker thread for node " + self.node_id)
+            #logger.debug("Going to delete connection checker thread for node " + self.node_id)
             self.thread.cancel()
-            logger.debug("deleted connection checker thread for node " + self.node_id)   
+            logger.debug(purple("deleted connection checker thread") + " for node " + self.node_id)
+            del self.thread
+            self.thread = None  
 
     def __del__(self):
         self.delete_thread()
