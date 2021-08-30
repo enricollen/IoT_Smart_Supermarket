@@ -105,6 +105,12 @@ static struct mqtt_connection conn;
 
 static int period = 0;
 
+enum PUBLISH_TOPIC {DISCOVERY, TEMPERATURE};
+
+const char* string_last_publish_topic[] = {"DISCOVERY", "TEMPERATURE"};
+
+static enum PUBLISH_TOPIC last_publish_topic = TEMPERATURE;
+
 /*---------------------------------------------------------------------------*/
 PROCESS(mqtt_client_process, "MQTT Client");
 
@@ -114,10 +120,12 @@ PROCESS(mqtt_client_process, "MQTT Client");
 #define HIGH_TEMP_TRESHOLD 8.0
 #define LOW_TEMP_TRESHOLD -4.0
 #define MAX_DIFF 20    //10 times maximum diff
-#define THERMOSTAT_DELTA 2
-#define INERTIAL_DELTA THERMOSTAT_DELTA+1
+#define THERMOSTAT_DELTA 1
+#define INERTIAL_DELTA THERMOSTAT_DELTA + 0.5
 
 enum binary_state {OFF, ON};
+
+const char* string_compressor_state[] = {"OFF", "ON"};
 
 enum binary_state compressor_state = OFF;
 
@@ -127,7 +135,11 @@ float current_temperature = 0.0;
 
 enum DOOR_STATE {OPEN, CLOSED};
 
+const char* string_door_state[] = {"OPEN", "CLOSED"};
+
 enum DOOR_STATE door_state = CLOSED;
+
+static int consecutive_open_state_counter = 0;
 
 #define DEFAULT_PROBABILITY 50
 
@@ -147,12 +159,23 @@ bool door_is_open(){
     if(door_state == OPEN){
         //still open probability is higher than normal open probability
         open_probability = 80;
+        
+      if(consecutive_open_state_counter > 5){
+          open_probability = 50;
+      }else if (consecutive_open_state_counter > 10){
+          open_probability = 30;
+      }else if (consecutive_open_state_counter > 20){
+          open_probability = 10;
+      }
     }
 
     if(roll_dice(open_probability)){
         door_state = OPEN;
+        consecutive_open_state_counter++;
+        LOG_DBG("[door_is_open]: the door is OPEN since %d cycles \n", consecutive_open_state_counter);
     }else{
         door_state = CLOSED;
+        consecutive_open_state_counter = 0;
     }
 
     if(door_state == OPEN)
@@ -161,28 +184,30 @@ bool door_is_open(){
         return false;
 }
 
+#define COMPRESSOR_TEMPERATURE_CHANGE_PER_CYCLE 0.3
+#define DISPERSION_TEMPERATURE_CHANGE_PER_CYCLE 0.2
+#define OPEN_DOOR_TEMPERATURE_CHANGE_PER_CYCLE 0.5
+
+#define ROOM_TEMPERATURE 22.0
+
+bool is_temperature_raising = true;
+
 void sense_temperature(){
 
     if(door_is_open()){
 
-        current_temperature += 1.0;
+        current_temperature += OPEN_DOOR_TEMPERATURE_CHANGE_PER_CYCLE;
 
     }else{
-        /*float diff = ((float)(random() % MAX_DIFF)) / 10.0;
-
-        if(roll_dice(DEFAULT_PROBABILITY)){
-            diff *= -1.0;
-        }
-
-        current_temperature += diff;
-        */
        if(current_temperature > desired_temperature){
          compressor_state = ON;
-         if(current_temperature > desired_temperature + INERTIAL_DELTA){
-           current_temperature -= 0.1;
+         if(current_temperature > desired_temperature + INERTIAL_DELTA || ! is_temperature_raising){
+           current_temperature -= COMPRESSOR_TEMPERATURE_CHANGE_PER_CYCLE;
+           is_temperature_raising = false;
          }
          else{
-           current_temperature += 0.1;
+           current_temperature += DISPERSION_TEMPERATURE_CHANGE_PER_CYCLE;
+           is_temperature_raising = true;
          }
        }
        else{
@@ -190,12 +215,17 @@ void sense_temperature(){
            compressor_state = OFF;
          }
          if(compressor_state==ON){
-           current_temperature -= 0.1;
+           current_temperature -= COMPRESSOR_TEMPERATURE_CHANGE_PER_CYCLE;
+           is_temperature_raising = false;
          }
          else{
-           current_temperature += 0.1;
+           current_temperature += DISPERSION_TEMPERATURE_CHANGE_PER_CYCLE;
+           is_temperature_raising = true;
          }
        }
+    }
+    if(current_temperature > ROOM_TEMPERATURE){
+      current_temperature = ROOM_TEMPERATURE;
     }
 }
 
@@ -273,7 +303,14 @@ mqtt_event(struct mqtt_connection *m, mqtt_event_t event, void *data)
     break;
   }
   case MQTT_EVENT_PUBACK: {
-    printf("Publishing complete.\n");
+    //printf("Publishing complete.\n");
+    if(last_publish_topic == DISCOVERY){
+        last_publish_topic = TEMPERATURE;
+    }else{
+      //here we assume that the last message was published on fridge/id/temperature
+      last_publish_topic = DISCOVERY;
+    }
+    //LOG_DBG("[MQTT_EVENT_PUBACK]: last_publish_topic = %s\n", string_last_publish_topic[last_publish_topic]);
     break;
   }
   default:
@@ -304,9 +341,8 @@ PROCESS_THREAD(mqtt_client_process, ev, data)
   printf("MQTT Client Process\n");
 
   // Initialize the ClientID as MAC address
-  snprintf(client_id, BUFFER_SIZE, "%02x%02x%02x%02x%02x%02x",
-                     linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
-                     linkaddr_node_addr.u8[2], linkaddr_node_addr.u8[5],
+  snprintf(client_id, BUFFER_SIZE, "%02x%02x%02x",
+                     linkaddr_node_addr.u8[5],
                      linkaddr_node_addr.u8[6], linkaddr_node_addr.u8[7]);
 
   // Broker registration					 
@@ -400,28 +436,33 @@ PROCESS_THREAD(mqtt_client_process, ev, data)
 			
         #if ENABLE_SENSE_TEMPERATURE
         sense_temperature();
-        #endif
         
-        #if ENABLE_PUBLISH_CURRENT_STATE
-        // Publish something
-        sprintf(pub_topic, "fridge/%s/temperature", client_id); //a different topic for each temperature sensor node
-        LOG_DBG("[Publish Topic]: %s\n", pub_topic);
-        sprintf(app_buffer, "{\"temperature\": %.2f, \"timestamp\": %lu, \"unit\": \"celsius\", \"desired_temp\":%.2f}", current_temperature, clock_seconds(), desired_temperature);
-        mqtt_publish(&conn, NULL, pub_topic, (uint8_t *)app_buffer,
-                strlen(app_buffer), MQTT_QOS_LEVEL_0, MQTT_RETAIN_OFF);
+        LOG_DBG("[sense_temperature]: door_state = %s | compressor_state = %s | current_temperature = %.2f | desired_temperature = %.2f \n", string_door_state[door_state], string_compressor_state[compressor_state], current_temperature, desired_temperature);
+        
         #endif
       }
-
+      if(period%30 == 0){
+        #if ENABLE_PUBLISH_CURRENT_STATE
+        // Publish something
+        if(last_publish_topic != TEMPERATURE){
+            sprintf(pub_topic, "fridge/%s/temperature", client_id); //a different topic for each temperature sensor node
+            LOG_DBG("[Publish Topic]: %s\n", pub_topic);
+            sprintf(app_buffer, "{\"temperature\": %.2f, \"timestamp\": %lu, \"unit\": \"celsius\", \"desired_temp\":%.2f}", current_temperature, clock_seconds(), desired_temperature);
+            mqtt_publish(&conn, NULL, pub_topic, (uint8_t *)app_buffer,
+                    strlen(app_buffer), MQTT_QOS_LEVEL_1, MQTT_RETAIN_OFF);
+        }
         #if ENABLE_PUBLISH_DISCOVERY_MESSAGE
-        if (period % 40 == 0){
+        else if(last_publish_topic != DISCOVERY){
             sprintf(pub_topic, "%s", DISCOVERY_TOPIC); //a different topic for each temperature sensor node
             LOG_DBG("[Publish Topic]: %s\n", pub_topic);
             memset(app_buffer, 0, sizeof(app_buffer));
             sprintf(app_buffer, "{\"id\": \"%s\", \"kind\": \"%s\"}", client_id, NODE_KIND);
             mqtt_publish(&conn, NULL, pub_topic, (uint8_t *)app_buffer,
-                    strlen(app_buffer), MQTT_QOS_LEVEL_0, MQTT_RETAIN_OFF);
+                    strlen(app_buffer), MQTT_QOS_LEVEL_1, MQTT_RETAIN_OFF);
         }
         #endif
+        #endif
+      }      
 
       #endif
 		} else if ( state == STATE_DISCONNECTED ){
