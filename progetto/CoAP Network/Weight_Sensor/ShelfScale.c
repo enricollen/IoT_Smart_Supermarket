@@ -25,7 +25,7 @@ const char* node_name = "Weight&Refill Sensors and CoAP Server";
 #define MAX_WEIGHT 2000
 #define MIN_WEIGHT 0
 #define TRESHOLD_WEIGHT 200
-#define MEASURE_WEIGHT_PERIOD 5   //seconds
+#define MEASURE_WEIGHT_PERIOD 30   //seconds
 
 
 /* Declare and auto-start this file's process */

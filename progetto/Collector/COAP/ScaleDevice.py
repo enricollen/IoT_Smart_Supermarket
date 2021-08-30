@@ -7,7 +7,7 @@ logger = logging.getLogger("COAPModule")
 
 import datetime
 
-from COAP.const import SHELF_SCALE
+from COAP.const import SHELF_SCALE, blue
 from Node import Node
 
 class ScaleDevice(Node):
@@ -46,44 +46,65 @@ class ScaleDevice(Node):
         
         price_obj = self.linked_price_display
         
+        price_node_id = price_obj.node_id
+
         initial_price = price_obj.initial_price
         current_price = price_obj.current_price
+        new_price = current_price
         #here we can implement the logic for the price changing, after we can easily change the price
         """
         THE PRICE CHANGES' RULES:
-        1a. A product has a good selling ratio if num_of_shelf_refills / hour is more than 200
-        1b. A product has a bad selling ratio if num_of_shelf_refills / hour is less than 100
+        1a. A product has a good selling ratio if num_of_shelf_refills / hour is more than 100
+        1b. A product has a bad selling ratio if num_of_shelf_refills / hour is less than 50
         1c. A product has a terrible selling ratio if num_of_shelf_refills / hour is less than 10
         2a. A product can increase its price until 30% more than the initial price
         2b. A product can decrease its price until 60% less than the initial price
-        3a. Do not change the price of a product, if it has changed recently (if price_obj.last_price_change is in the last 30 minutes)
+        3a. Do not change the price of a product, if it has changed recently (if price_obj.last_price_change is in the last 1 minute)
 
         """
-        CHANGE_THRESHOLD = 30 * 60  #30 minutes times 60 to obtain the value in seconds
+        GOOD_SELLING_PERFORMANCE_THRESHOLD = 100
+        GOOD_SELLING_PRICE_THRESHOLD = 1.3
+
+        BAD_SELLING_PERFORMANCE_THRESHOLD = 50
+        BAD_SELLING_PRICE_THRESHOLD = 0.6
+
+        TERRIBLE_SELLING_PERFORMANCE_THRESHOLD = 10
+        TERRIBLE_SELLING_PRICE_THRESHOLD = 0.4
+
+        CHANGE_TIME_THRESHOLD = 1 * 60  #30 minutes times 60 to obtain the value in seconds
 
         time_diff = datetime.datetime.now() - price_obj.last_price_change
 
         assert isinstance(time_diff, datetime.timedelta)
-        if(time_diff.total_seconds() < CHANGE_THRESHOLD):
+        if(time_diff.total_seconds() < CHANGE_TIME_THRESHOLD):
             return
 
         number_of_hours = seconds_since_begin / 3600
 
-        if( (num_of_shelf_refills / number_of_hours) > 200):
+        selling_score = num_of_shelf_refills / number_of_hours
+
+        if( selling_score > GOOD_SELLING_PERFORMANCE_THRESHOLD):
             #case 1a -> we have to increase the price
             new_price = current_price * 1.1
-            if(new_price > initial_price * 1.3):
-                new_price = initial_price * 1.3
-        elif( (num_of_shelf_refills / number_of_hours) < 10):
+            if(new_price > initial_price * GOOD_SELLING_PRICE_THRESHOLD):
+                new_price = initial_price * GOOD_SELLING_PRICE_THRESHOLD
+        elif( selling_score < TERRIBLE_SELLING_PERFORMANCE_THRESHOLD):
             #case 1c -> we want to set the price to minimum value
-            new_price = initial_price * 0.4
-        elif( (num_of_shelf_refills / number_of_hours) < 100):
+            new_price = initial_price * TERRIBLE_SELLING_PRICE_THRESHOLD
+        elif( selling_score < BAD_SELLING_PERFORMANCE_THRESHOLD):
              #case 1b -> we have to decrease the price
             new_price = current_price * 0.9
-            if(new_price < initial_price * 0.4):
-                new_price = initial_price * 0.4
+            if(new_price < initial_price * BAD_SELLING_PRICE_THRESHOLD):
+                new_price = initial_price * BAD_SELLING_PRICE_THRESHOLD
         else:
             #normal selling ratio
+            new_price = current_price
+
+        new_price = round(new_price, 2)
+
+        logger.debug("[price_updater]: price_display nodeID = " + price_node_id + " | " + blue("selling_score = " + str(selling_score)) + " | new_price = " + str(new_price) +  " | current_price = " + str(current_price) + " | seconds_since_begin = " + str(seconds_since_begin))
+
+        if(new_price == current_price):
             return
 
         price_obj.set_new_price(new_price)
