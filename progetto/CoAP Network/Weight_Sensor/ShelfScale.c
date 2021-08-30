@@ -133,7 +133,7 @@ PROCESS_THREAD(contiki_ng_br_coap_server, ev, data){
     }
 
     if(status == CONNECTED_TO_COLLECTOR 
-      && seconds_counter % CHECK_STATUS_PERIOD){
+      && seconds_counter % CHECK_STATUS_PERIOD == 0){
         //we want to ping the collector to check the presence of this node
         coap_endpoint_parse(SERVER_EP, strlen(SERVER_EP), &server_ep);	
           

@@ -18,7 +18,7 @@ DEFAULT_SUB_TOPIC = "fenom"
 
 class MqttClient:
     client = 0
-    sub_topic_array = []
+    #sub_topic_array = []
     DEFAULT_SUB_TOPIC = DEFAULT_SUB_TOPIC
     name_style = CYAN_STYLE
     last_publish_ack = None
@@ -26,6 +26,8 @@ class MqttClient:
     def __init__(self, sub_topics = []):    #sub_topics can be a list or a string of a single topic
 
         logger.info("Starting mqtt client " + self.__class__.__name__)
+
+        self.sub_topic_array = []
 
         if(isinstance(sub_topics, list)):
             self.sub_topic_array += sub_topics

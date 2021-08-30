@@ -1,6 +1,5 @@
 import datetime
 import json
-from progetto.Collector.COAP.PriceDisplay import NAME_STYLE
 
 from MQTT.MqttClient import MqttClient
 

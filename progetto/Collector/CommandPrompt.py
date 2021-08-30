@@ -88,7 +88,8 @@ class CommandPrompt:
             "info" : self.info,
             "exit" : self.close
         }
-        command_string = input(green("paciollen@smart_supermarket") +":" + red("collector") + "$ ")
+        print(green("paciollen@smart_supermarket") +":" + red("collector") + "$ ", end="")
+        command_string = input()
 
         #we have to parse the first part of the string using ' ' (space) as delimiter 
             # -> at that point we have to check that it is a valid command
