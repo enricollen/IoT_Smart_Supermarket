@@ -1,5 +1,6 @@
 import datetime
 import json
+from progetto.Collector.COAP.PriceDisplay import NAME_STYLE
 
 from MQTT.MqttClient import MqttClient
 
@@ -10,7 +11,9 @@ from DatabaseConnection import DatabaseConnection
 import logging
 logger = logging.getLogger("COAPModule")
 
-from COAP.const import NO_CHANGE, bold, FRIDGE_TEMPERATURE_SENSOR
+from COAP.const import NO_CHANGE, PURPLE_STYLE, bold, FRIDGE_TEMPERATURE_SENSOR
+
+NAME_STYLE = PURPLE_STYLE
 
 CURRENT_TEMP_KEY = "temperature"
 DESIRED_TEMP_KEY = "desired_temp"
@@ -31,6 +34,7 @@ class FridgeTempSensor(MqttClient, Node):
 
     def __init__(self, node_id):
         self.node_id = node_id
+        self.name_style = NAME_STYLE
         sub_topic = "fridge/" + self.node_id + "/temperature"
         self.pub_topic = "fridge/"+ self.node_id + "/desired_temp"
         super().__init__(sub_topic)

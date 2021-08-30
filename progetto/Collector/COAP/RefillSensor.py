@@ -11,9 +11,9 @@ LAST_REFILL_JSON_KEY = "last_refill_ts"
 ID_KEY = "id"
 NOW_KEY = "now"
 
-from COAP.const import CYAN_STYLE, NO_CHANGE
+from COAP.const import GREEN_STYLE, NO_CHANGE
 
-NAME_STYLE = CYAN_STYLE
+NAME_STYLE = GREEN_STYLE
 
 class RefillSensor(COAPModel):
     

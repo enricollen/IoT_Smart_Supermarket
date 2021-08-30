@@ -73,9 +73,9 @@ def colored_print_kind(string):
     Expects as input one of the valid kind, returns the given string colored if it is a valid kind
     """
     options = {
-        SHELF_SCALE : purple,
-        FRIDGE_TEMPERATURE_SENSOR: blue,
-        PRICE_DISPLAY : green
+        SHELF_SCALE : green,
+        FRIDGE_TEMPERATURE_SENSOR: purple,
+        PRICE_DISPLAY : blue
     }
     if string in options:
         string = options[string](string)

@@ -19,6 +19,7 @@ from CommandPrompt import CommandPrompt
 
 import logging
 import sys
+import threading
 
 log_format = "%(asctime)s - %(threadName)-10s - %(name)s - %(levelname)s - %(message)s"
 log_file = "log.txt"
@@ -87,4 +88,9 @@ except KeyboardInterrupt:
                                                              
     --------------------------------------------------------------------
     """)
-    exit()    
+
+    """
+    for thread in threading.enumerate(): 
+        print(thread.name)
+    """
+    sys.exit()    
