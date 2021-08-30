@@ -8,3 +8,4 @@ progetto/Collector/__pycache__/DatabaseConnection.cpython-38.pyc
 *.pyc
 __pycache__/
 progetto/Collector/log.txt
+progetto/Collector/errors.log
