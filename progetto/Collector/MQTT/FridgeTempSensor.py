@@ -114,6 +114,8 @@ class FridgeTempSensor(MqttClient, Node):
             logger.warning("unable to parse state from json")
             return False
 
+        self.check_temperature_threshold_routine()
+
         if no_change:
             return NO_CHANGE
         else:
@@ -131,6 +133,35 @@ class FridgeTempSensor(MqttClient, Node):
     def set_new_temp(self, new_temp):
         ret = self.publish(new_temp, self.pub_topic)
         return ret
+
+    def bind_fridge_alarm_light(self, fridge_alarm_light):
+        if(self.linked_fridge_alarm_light!=None):
+            logger.warning("[FridgeAlarmLight: bind_fridge_alarm_light] FridgeAlarmLight has already been associated with FridgeTempSensor")
+            return False
+
+        assert isinstance(fridge_alarm_light, MQTT.FridgeAlarmLight.FridgeAlarmLight)
+
+        self.linked_fridge_alarm_light = fridge_alarm_light
+
+    def unbind_coupled_device(self):
+        if(self.linked_fridge_alarm_light):
+            del self.linked_fridge_alarm_light
+        return
+
+    def check_temperature_threshold_routine(self):
+        if(self.linked_fridge_alarm_light == None):
+            return
+        if(self.current_temp > self.high_temperature_threshold):
+            self.linked_fridge_alarm_light.change_state("ON")
+            logger.info("[check_temperature_threshold_routine] [" + self.class_style(self.kind + " ID: " + self.node_id) + "] ALARM! the temperature is over the threshold!")
+            logger.info("[check_temperature_threshold_routine] just switched ON the fridge alarm of ID " + self.linked_fridge_alarm_light.node_id)
+        else:
+            self.linked_fridge_alarm_light.change_state("OFF")
+
+    def delete(self):
+        self.unbind_coupled_device()
+        self.delete_thread()
+        self.close()
 
 
 """
