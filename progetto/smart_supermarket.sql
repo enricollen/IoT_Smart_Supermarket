@@ -87,6 +87,21 @@ CREATE TABLE `weight_sensor_state` (
   `current_weight` int(10) unsigned NOT NULL COMMENT 'unit=grams',
   PRIMARY KEY (`ID`)
 ) ENGINE=InnoDB AUTO_INCREMENT=136 DEFAULT CHARSET=utf8mb4;
+
+
+DROP TABLE IF EXISTS `fridge_alarm_light`;
+
+CREATE TABLE `fridge_alarm_light` (
+  `ID` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `node_id` varchar(50) NOT NULL,
+  `timestamp` timestamp NOT NULL DEFAULT current_timestamp(),
+  `node_ts_in_seconds` INT NOT NULL COMMENT 'seconds since last node restart',
+  `state` VARCHAR(5) NOT NULL,
+  `last_state_change` timestamp,
+  PRIMARY KEY (`ID`)
+) ENGINE=InnoDB AUTO_INCREMENT=277 DEFAULT CHARSET=utf8mb4;
+
+
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;

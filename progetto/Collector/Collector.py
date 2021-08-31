@@ -7,6 +7,7 @@ from MQTT.MqttClient import MqttClient
 from COAP.COAP_Model import COAPModel
 
 from MQTT.FridgeTempSensor import FridgeTempSensor
+from MQTT.FridgeAlarmLight import FridgeAlarmLight
 
 from Node import Node
 
@@ -24,10 +25,13 @@ class Collector:
     price_display_array = [] #array of PriceDisplays
     shelf_scale_device_array = [] # [ScaleDevice1, ScaleDevice2...]
     coupled_scale_and_price = [] # [[Scale1, Price1], [Scale2, Price2], ...]
+    coupled_fridge_temp_sensor_and_alarm = [] # [[FridgeTempSensor1, FridgeAlarmLight1], [FridgeTempSensor2, FridgeAlarmLight2], ...]
     
     coap_devices = {}    #key: ip | value: bounded_object
 
     fridge_temp_sensor_array = [] # [FridgeTempSensor1, FridgeTempSensor2, ...] 
+
+    fridge_alarm_light_array = [] # [FridgeAlarmLight1, FridgeAlarmLight2, ...]
 
     mqtt_devices = {}   #key: node_id | value: bounded_object
 
@@ -188,6 +192,12 @@ class Collector:
 
 
     def unbind_price_and_scale(self, obj):
+        """
+        call this method when the price or the scale node is disconnected from the collector.
+        This method will:
+        - remove the obj from the couple in which it is
+        - alternatively, if it is spare, it will delete it from the spare array
+        """
 
         found = False
 
@@ -198,19 +208,23 @@ class Collector:
                 assert isinstance(couple, list)
                 couple.remove(obj)
                 spare_obj = couple.pop()
+
+                spare_obj.unbind_coupled_device()
+                obj.unbind_coupled_device()
+
                 #we want to know the kind of this obj and add it to the correct spare_array
                 if spare_obj.kind == PRICE_DISPLAY:
                     self.spare_price_displays.append(spare_obj)
                 elif spare_obj.kind == SHELF_SCALE:
                     self.spare_scale_devices.append(spare_obj)
                 return
-
+        
         if not found:
             if obj.kind == PRICE_DISPLAY:
                 self.spare_price_displays.remove(obj)
             elif obj.kind == SHELF_SCALE:
                 self.spare_scale_devices.remove(obj)
-
+        
         return
 
 #---------------------------------------------------------------------------------------------
@@ -240,17 +254,115 @@ class Collector:
 
         self.fridge_temp_sensor_array.append(fridge_temp_sensor)
 
+        #logic for binding a fridge temp sensor sensor with correspondent fridge alarm light
+        self.bind_fridge_alarm_and_temp_sensor(obj_fridge_temp_sensor= fridge_temp_sensor) 
+
         return self
 
     def remove_fridge_temperature_sensor(self, node_id):
-        #TO TEST:
-        #check that the remove from temp_sensor_array works properly
         obj = self.mqtt_devices[node_id]
-        self.fridge_temp_sensor_array.remove(obj)   #node_id
+        self.fridge_temp_sensor_array.remove(obj)
         assert isinstance(obj, FridgeTempSensor)
+        self.unbind_fridge_alarm_and_temp_sensor(obj)
         obj.delete()
         del self.mqtt_devices[node_id]
         del obj
+        return
+
+    def register_new_fridge_alarm_light(self, node_id):
+        #we should check that this sensor is not present yet
+        if node_id in self.connected_node_id_list():
+            return ALREADY_REGISTERED
+        
+        try:
+            fridge_alarm_light = FridgeAlarmLight(node_id)
+        except Exception as e:
+            logger.critical("[Collector->register_new_fridge_alarm_light] exception: " + str(e))
+            traceback.print_exc()
+            return False
+
+        self.register_new_mqtt_device(node_id, fridge_alarm_light, FRIDGE_ALARM_LIGHT)
+
+        self.fridge_alarm_light_array.append(fridge_alarm_light)
+
+        #logic for binding a fridge temp sensor sensor with correspondent fridge alarm light
+        self.bind_fridge_alarm_and_temp_sensor(obj_fridge_alarm_light= fridge_alarm_light) 
+
+        return self
+
+    def remove_fridge_alarm_light(self, node_id):
+        obj = self.mqtt_devices[node_id]
+        self.fridge_alarm_light_array.remove(obj)
+        assert isinstance(obj, FridgeAlarmLight)
+        self.unbind_fridge_alarm_and_temp_sensor(obj)
+        obj.delete()
+        del self.mqtt_devices[node_id]
+        del obj
+        return
+
+    #utility array to make binding process easier
+    spare_fridge_alarm_lights = [] 
+    spare_fridge_temp_sensors = []
+
+    def bind_fridge_alarm_and_temp_sensor(self, obj_fridge_alarm_light = None, obj_fridge_temp_sensor = None):
+        if obj_fridge_alarm_light: #we want to bind fridge alarm light with a spare fridge temp sensor
+            if len(self.spare_fridge_temp_sensors)==0:
+                self.spare_fridge_alarm_lights.append(obj_fridge_alarm_light)
+                return
+            else:
+                obj_fridge_temp_sensor = self.spare_fridge_temp_sensors.pop()
+                assert isinstance(obj_fridge_temp_sensor, FridgeTempSensor), "[collector.bind_fridge_alarm_and_temp_sensor]: obj_fridge_temp_sensor is not instance of FridgeTempSensor!"
+                assert isinstance(obj_fridge_alarm_light, FridgeAlarmLight), "[collector.bind_fridge_alarm_and_temp_sensor]: obj_fridge_alarm_light is not instance of FridgeAlarmLight!"
+                obj_fridge_temp_sensor.bind_fridge_alarm_light(obj_fridge_alarm_light)
+                obj_fridge_alarm_light.bind_fridge_temp_sensor(obj_fridge_temp_sensor)
+                self.coupled_fridge_temp_sensor_and_alarm.append([obj_fridge_temp_sensor, obj_fridge_alarm_light])
+
+        elif obj_fridge_temp_sensor: #we want to bind fridge temp sensor with a spare fridge alarm light
+            if len(self.spare_fridge_alarm_lights)==0:
+                self.spare_fridge_temp_sensors.append(obj_fridge_temp_sensor)
+                return
+            else:
+                obj_fridge_alarm_light = self.spare_fridge_alarm_lights.pop()
+                assert isinstance(obj_fridge_temp_sensor, FridgeTempSensor), "[collector.bind_fridge_alarm_and_temp_sensor]: obj_fridge_temp_sensor is not instance of FridgeTempSensor!"
+                assert isinstance(obj_fridge_alarm_light, FridgeAlarmLight), "[collector.bind_fridge_alarm_and_temp_sensor]: obj_fridge_alarm_light is not instance of FridgeAlarmLight!"
+                obj_fridge_temp_sensor.bind_fridge_alarm_light(obj_fridge_alarm_light)
+                obj_fridge_alarm_light.bind_fridge_temp_sensor(obj_fridge_temp_sensor)
+                self.coupled_fridge_temp_sensor_and_alarm.append([obj_fridge_temp_sensor, obj_fridge_alarm_light])
+
+
+    def unbind_fridge_alarm_and_temp_sensor(self, obj):
+        """
+        call this method when the temp_alarm_light or the temp_sensor node is disconnected from the collector.
+        This method will:
+        - remove the obj from the couple in which it is
+        - alternatively, if it is spare, it will delete it from the spare array
+        """
+        found = False
+
+        for couple in self.coupled_fridge_temp_sensor_and_alarm:
+            if obj in couple:
+                found = True
+                self.coupled_fridge_temp_sensor_and_alarm.remove(couple)
+                assert isinstance(couple, list)
+                couple.remove(obj)
+                spare_obj = couple.pop()
+
+                spare_obj.unbind_coupled_device()
+                obj.unbind_coupled_device()
+
+                #we want to know the kind of this obj and add it to the correct spare_array
+                if spare_obj.kind == FRIDGE_ALARM_LIGHT:
+                    self.spare_fridge_alarm_lights.append(spare_obj)
+                elif spare_obj.kind == FRIDGE_TEMPERATURE_SENSOR:
+                    self.spare_fridge_temp_sensors.append(spare_obj)
+                return
+        
+        if not found:
+            if obj.kind == FRIDGE_ALARM_LIGHT:
+                self.spare_fridge_alarm_lights.remove(obj)
+            elif obj.kind == FRIDGE_TEMPERATURE_SENSOR:
+                self.spare_fridge_temp_sensors.remove(obj)
+        
         return
 
 #---------------------------------------------------------------------------------------------
@@ -274,7 +386,8 @@ class Collector:
         action = {
             FRIDGE_TEMPERATURE_SENSOR: self.remove_fridge_temperature_sensor,
             PRICE_DISPLAY: self.remove_price_display,
-            SHELF_SCALE: self.remove_scale_device
+            SHELF_SCALE: self.remove_scale_device,
+            FRIDGE_ALARM_LIGHT : self.remove_fridge_alarm_light
         }
 
         logger.debug("going to delete node " + node_id + " | kind = " + node_kind)
@@ -312,14 +425,30 @@ class Collector:
 
     def list_couples(self):
         """
-        return an array of array made of two strings, 
-        the first is the node_id of ScaleDevice, the latter is the node_id of PriceDisplay
+        return a dict of arrays of array made of two strings, 
+        - for the key "scale-price" the couples inside the array are made of:
+        - the first is the node_id of ScaleDevice, the latter is the node_id of PriceDisplay
         - [
         -    ["node_id of ScaleDevice1", "node_id of PriceDisplay1"],
         -    ["node_id of ScaleDevice2", "node_id of PriceDisplay2"]
         -]
+        - for the key "fridge:temp-alarm" the couples inside the array are made of:
+        - the first is the node_id of FridgeTempSensor, the latter is the node_id of FridgeAlarmLight
+        - [
+        -    ["node_id of FridgeTempSensor1", "node_id of FridgeAlarmLight1"],
+        -    ["node_id of FridgeTempSensor2", "node_id of FridgeAlarmLight2"]
+        -]
+        -
+        -the dict is:
+        - {
+        -    "scale-price"       : array of array of scale and price,
+        -    "fridge:temp-alarm" : array of array of fridge temp and alarm
+        - }
         """
-        couples = []
+        scale_price_key = SCALE_AND_PRICE_COUPLE #"scale-price"
+        fridge_temp_alarm_key = TEMP_AND_ALARM_COUPLE #"fridge:temp-alarm"
+
+        scale_and_price_couples = []
         #[[Scale1, Price1], [Scale2, Price2]]
         for couple in self.coupled_scale_and_price:
             scale_device_obj = couple[0]
@@ -327,8 +456,24 @@ class Collector:
             price_display_obj = couple[1]
             assert isinstance(price_display_obj, PriceDisplay)
             row = [str(scale_device_obj.node_id), str(price_display_obj.node_id)]
-            couples.append(row)
-        return couples
+            scale_and_price_couples.append(row)
+
+        temp_and_alarm_couples = []
+        #[[Temp1, Alarm1], [Temp2, Alarm2]]
+        for couple in self.coupled_fridge_temp_sensor_and_alarm:
+            fridge_temp_sensor_obj = couple[0]
+            assert isinstance(fridge_temp_sensor_obj, FridgeTempSensor)
+            fridge_alarm_light_obj = couple[1]
+            assert isinstance(fridge_alarm_light_obj, FridgeAlarmLight)
+            row = [str(fridge_temp_sensor_obj.node_id), str(fridge_alarm_light_obj.node_id)]
+            temp_and_alarm_couples.append(row)
+
+        the_dict = {
+            scale_price_key         : scale_and_price_couples,
+            fridge_temp_alarm_key   : temp_and_alarm_couples
+        }
+
+        return the_dict
 
     def list_spare_devices(self, desired_kind = "any"):
         """
@@ -347,6 +492,18 @@ class Collector:
                 assert isinstance(price_display_obj, PriceDisplay)
                 price_display_node_id = price_display_obj.node_id
                 devices_info[price_display_node_id] = price_display_obj.kind
+        
+        if(desired_kind == "any" or desired_kind == FRIDGE_TEMPERATURE_SENSOR):
+            for fridge_temp_sensor_obj in self.spare_fridge_temp_sensors:
+                assert isinstance(fridge_temp_sensor_obj, FridgeTempSensor)
+                fridge_temp_sensor_node_id = fridge_temp_sensor_obj.node_id
+                devices_info[fridge_temp_sensor_node_id] = fridge_temp_sensor_obj.kind
+
+        if(desired_kind == "any" or desired_kind == FRIDGE_ALARM_LIGHT):
+            for fridge_alarm_light_obj in self.spare_fridge_alarm_lights:
+                assert isinstance(fridge_alarm_light_obj, FridgeAlarmLight)
+                fridge_alarm_light_node_id = fridge_alarm_light_obj.node_id
+                devices_info[fridge_alarm_light_node_id] = fridge_alarm_light_obj.kind
         
         return devices_info
 
@@ -454,6 +611,63 @@ class Collector:
             assert isinstance(temp_obj, FridgeTempSensor)
             temp_obj.set_new_temp(new_temp=new_temp)
             return True
+
+    def get_all_fridge_alarm_states(self):
+        """
+        returns a dict of dict in which each key is the node_id of a FridgeAlarmLight node, and each value is a dict made as follows:
+        - {
+        -   "current_state" : current_state_value, 
+        -   "last_state_change" : last_state_change_timestamp
+        - }
+        - of the FridgeScaleDevice with ID = node_id
+        """
+        all_fridge_alarms_dict = {}
+
+        for alarm_obj in self.fridge_alarm_light_array:              
+            assert isinstance(alarm_obj, FridgeAlarmLight)
+
+            alarm_node_id = alarm_obj.node_id
+
+            alarm_dict = {
+                "current_state":alarm_obj.current_alarm_state,
+                "last_state_change":alarm_obj.last_alarm_state_change,
+            }
+            all_fridge_alarms_dict[alarm_node_id] = alarm_dict
+
+        return all_fridge_alarms_dict
+
+    def get_fridge_alarm_state(self, node_id):
+        """
+        returns a dict 
+        - {
+        -   "current_state" : current_state_value, 
+        -   "last_state_change" : last_state_change_timestamp
+        - }
+        - of the FridgeScaleDevice with ID = node_id
+        """
+        alarm_obj = self.all_devices[node_id]
+        if not isinstance(alarm_obj, FridgeAlarmLight):
+            return False
+        else:
+            assert isinstance(alarm_obj, FridgeAlarmLight)
+            alarm_dict = {
+                "current_state":alarm_obj.current_alarm_state,
+                "last_state_change":alarm_obj.last_alarm_state_change,
+            }
+            return alarm_dict
+
+    def set_fridge_alarm_state(self, node_id, new_state):
+        """
+        sets the state of the FridgeAlarmLight which node_id is node_id to the given state
+        """
+        ALLOWED_STATES = ["ON", "OFF"]
+
+        fridge_alarm_obj = self.all_devices[node_id]
+        if not isinstance(fridge_alarm_obj, FridgeAlarmLight):
+            return False
+        if new_state not in ALLOWED_STATES:
+            return False
+        return fridge_alarm_obj.change_state(new_state)
 
     def get_scale_info(self, node_id):
         """

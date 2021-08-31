@@ -4,7 +4,7 @@ import logging
 logger = logging.getLogger("MqttDiscoverer")
 logger.setLevel(level=logging.DEBUG)
 
-from COAP.const import ADDRESS_ALREADY_IN_USE, FRIDGE_TEMPERATURE_SENSOR, NOT_REGISTERED, bold, italic, ALREADY_REGISTERED, REGISTRATION_SUCCESSFULL, INTERNAL_ERROR, WRONG_PAYLOAD, KIND_NOT_RECOGNISED
+from COAP.const import ADDRESS_ALREADY_IN_USE, FRIDGE_TEMPERATURE_SENSOR, FRIDGE_ALARM_LIGHT, NOT_REGISTERED, bold, italic, ALREADY_REGISTERED, REGISTRATION_SUCCESSFULL, INTERNAL_ERROR, WRONG_PAYLOAD, KIND_NOT_RECOGNISED
 
 from MQTT.MqttClient import MqttClient
 from Collector import collector
@@ -37,7 +37,8 @@ class MQTTDiscoverer(MqttClient):
     def on_message(self, client, userdata, msg):
         
         options = {
-        FRIDGE_TEMPERATURE_SENSOR : collector.register_new_fridge_temp_sensor
+        FRIDGE_TEMPERATURE_SENSOR : collector.register_new_fridge_temp_sensor,
+        FRIDGE_ALARM_LIGHT        : collector.register_new_fridge_alarm_light
         }
 
         payload_str = str(msg.payload.decode("utf-8").split('\x00',1)[0])
