@@ -15,7 +15,7 @@
 #include <string.h>
 #include <strings.h>
 /*---------------------------------------------------------------------------*/
-#define LOG_MODULE "mqtt-client"
+#define LOG_MODULE "fridge_alarm_light"
 #ifdef MQTT_CLIENT_CONF_LOG_LEVEL
 #define LOG_LEVEL MQTT_CLIENT_CONF_LOG_LEVEL
 #else
@@ -148,6 +148,15 @@ static const char* get_current_state_as_string(){
   
   default:
     return "ERR";
+  }
+}
+
+void led_state_handler(){
+  if(alarm_state == ON){
+    leds_toggle(LEDS_ALL);
+  }
+  else if(alarm_state == OFF){
+    leds_off(LEDS_ALL);
   }
 }
 
@@ -349,7 +358,7 @@ PROCESS_THREAD(mqtt_client_process, ev, data)
         if(last_publish_topic != STATE){
             sprintf(pub_topic, "alarm/%s/state", client_id); //a different topic for each alarm actuator node
             LOG_DBG("[Publish Topic]: %s\n", pub_topic);
-            sprintf(app_buffer, "{\"alarm_state\": %s, \"timestamp\": %lu}", get_current_state_as_string(), clock_seconds());
+            sprintf(app_buffer, "{\"alarm_state\": \"%s\", \"timestamp\": %lu}", get_current_state_as_string(), clock_seconds());
             mqtt_publish(&conn, NULL, pub_topic, (uint8_t *)app_buffer,
                     strlen(app_buffer), MQTT_QOS_LEVEL_1, MQTT_RETAIN_OFF);
         }
@@ -373,6 +382,9 @@ PROCESS_THREAD(mqtt_client_process, ev, data)
        mqtt_disconnect(&conn);
        state = STATE_INIT;
 		}
+
+    led_state_handler();
+
     period++;
 		
 		etimer_set(&periodic_timer, STATE_MACHINE_PERIODIC); 
