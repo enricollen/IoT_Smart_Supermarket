@@ -1,8 +1,19 @@
 PRICE_DISPLAY = "price_display"
 SHELF_SCALE = "shelf_scale"
 FRIDGE_TEMPERATURE_SENSOR = "fridge_temp_sensor"
+FRIDGE_ALARM_LIGHT = "fridge_alarm_light"
 
-KINDS_LIST = [PRICE_DISPLAY, SHELF_SCALE, FRIDGE_TEMPERATURE_SENSOR]
+KINDS_LIST = [PRICE_DISPLAY, SHELF_SCALE, FRIDGE_TEMPERATURE_SENSOR, FRIDGE_ALARM_LIGHT]
+
+SCALE_AND_PRICE_COUPLE = "scale-price"
+TEMP_AND_ALARM_COUPLE = "fridge:temp-alarm"
+
+COUPLES_KINDS_LIST = [SCALE_AND_PRICE_COUPLE, TEMP_AND_ALARM_COUPLE]
+
+COUPLES_NAMES_DICT = {
+    SCALE_AND_PRICE_COUPLE : "ScaleDevice\t\t\tPriceDisplay",
+    TEMP_AND_ALARM_COUPLE  : "FridgeTempSensor\t\tFridgeAlarmLight"
+}
 
 KIND_NOT_RECOGNISED = "kind not recognised"
 NO_CHANGE = "fenom"
@@ -68,6 +79,9 @@ def blue(string):
 def purple(string):
     return PURPLE_COLOR + string + DEFAULT_COLOR
 
+def yellow(string):
+    return YELLOW_COLOR + string + DEFAULT_COLOR
+
 def colored_print_kind(string):
     """
     Expects as input one of the valid kind, returns the given string colored if it is a valid kind
@@ -75,7 +89,8 @@ def colored_print_kind(string):
     options = {
         SHELF_SCALE : green,
         FRIDGE_TEMPERATURE_SENSOR: purple,
-        PRICE_DISPLAY : blue
+        PRICE_DISPLAY : blue,
+        FRIDGE_ALARM_LIGHT: yellow
     }
     if string in options:
         string = options[string](string)
