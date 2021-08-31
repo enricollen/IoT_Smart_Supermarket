@@ -26,7 +26,7 @@ class PriceDisplay(COAPModel, Node):
     
     current_price = DEFAULT_PRICE
     last_price_change = -1  #it is a datetime
-    linked_scale_device = ""
+    linked_scale_device = None
     initial_price = -1  #we will use that for the price ranges
 
     kind = PRICE_DISPLAY
@@ -89,15 +89,21 @@ class PriceDisplay(COAPModel, Node):
         return ret
     
     def bind_scale_device(self, scale_obj):
-        if(self.linked_scale_device!=""):
+        if(self.linked_scale_device!=None):
             logger.warning("[PriceDisplay: bind_scale_device] Price Display has already been associated with Scale Sensor")
             return False
 
         self.linked_scale_device = scale_obj
 
+    def unbind_coupled_device(self):
+        if(self.linked_scale_device):
+            del self.linked_scale_device
+        return
+
     def delete(self):
         logger.debug("PriceDisplay id " + self.node_id + " beeing deallocated!")
         self.close_coap_connections()
+        self.unbind_coupled_device()
         self.delete_thread()
         
 

@@ -1,6 +1,8 @@
 import datetime
 import json
 
+
+import MQTT.FridgeAlarmLight
 from MQTT.MqttClient import MqttClient
 
 from Node import Node
@@ -8,7 +10,8 @@ from Node import Node
 from DatabaseConnection import DatabaseConnection
 
 import logging
-logger = logging.getLogger("COAPModule")
+logger = logging.getLogger("MQTTModule")
+logger.setLevel(level=logging.DEBUG)
 
 from COAP.const import NO_CHANGE, PURPLE_STYLE, bold, FRIDGE_TEMPERATURE_SENSOR
 
@@ -20,6 +23,8 @@ NOW_KEY = "timestamp"
 
 DEFAULT_DESIRED_TEMP = 0.0
 
+TEMPERATURE_THRESHOLD_DIFF = 10
+
 class FridgeTempSensor(MqttClient, Node):
 
     node_id = ""
@@ -28,6 +33,10 @@ class FridgeTempSensor(MqttClient, Node):
     node_ts_in_seconds = -1
     current_temp = ""
     desired_temp = DEFAULT_DESIRED_TEMP
+
+    high_temperature_threshold = DEFAULT_DESIRED_TEMP + TEMPERATURE_THRESHOLD_DIFF
+
+    linked_fridge_alarm_light = None
 
     kind = FRIDGE_TEMPERATURE_SENSOR
 
@@ -83,6 +92,10 @@ class FridgeTempSensor(MqttClient, Node):
 
         return
 
+    def update_desired_temp(self, new_desired_temp):
+        self.desired_temp = new_desired_temp
+        self.high_temperature_threshold = self.desired_temp + TEMPERATURE_THRESHOLD_DIFF
+
     def update_state_from_json(self, json):
         no_change = False
 
@@ -94,7 +107,7 @@ class FridgeTempSensor(MqttClient, Node):
                 no_change = True
 
             self.current_temp = json[CURRENT_TEMP_KEY]
-            self.desired_temp = json[DESIRED_TEMP_KEY]
+            self.update_desired_temp(json[DESIRED_TEMP_KEY])
             self.node_ts_in_seconds = json[NOW_KEY]
         
         except:

@@ -161,6 +161,11 @@ class ScaleDevice(Node):
 
         self.linked_price_display = price_display_obj
 
+    def unbind_coupled_device(self):
+        if(self.linked_price_display):
+            del self.linked_price_display
+        return
+
     def delete(self):
         logger.debug("ScaleDevice id " + self.node_id + " beeing deallocated!")
         if isinstance(self.weight_sensor, WeightSensor):
@@ -169,6 +174,7 @@ class ScaleDevice(Node):
         if isinstance(self.refill_sensor, RefillSensor):
             self.refill_sensor.delete()
             del self.refill_sensor
+        self.unbind_coupled_device()
         self.delete_thread()
 
     def __del__(self):
