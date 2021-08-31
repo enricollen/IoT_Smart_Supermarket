@@ -15,6 +15,8 @@ class CommandPrompt:
 
     thread = None
 
+    run = True
+
     commands = [
         "list",
         "list-kinds",
@@ -38,15 +40,21 @@ class CommandPrompt:
         self.thread = Thread(target=self.loop)
         self.thread.start()
 
-    #def stop(self):
-    #    if isinstance(self.thread, Thread):
-    #        self.thread.cancel()
+    def stop(self):
+        if isinstance(self.thread, Thread):
+            self.run = False
+            del self.thread
+            print("collector terminated. press ENTER to quit")
+
+    def __del__(self):
+        self.stop()
 
     def loop(self):
         #try:
-        while True:
+        while self.run:
             self.list_commands()
             self.read_command()
+        return
         #except KeyboardInterrupt:
         #    logger.debug("CommandPrompt received keyboard interrupt! terminated...")
         #    return
@@ -390,8 +398,11 @@ class CommandPrompt:
         print(str(node_infos))
         return
 
+    def dummy(self, param):
+        return
+
     def close(self, param):
-        print("not implemented. Please press CTRL + C")
+        print("Now you can press CTRL + C")
         #stop_collector()
         #raise KeyboardInterrupt
 

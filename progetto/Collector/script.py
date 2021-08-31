@@ -74,6 +74,7 @@ except KeyboardInterrupt:
     server.close()
     mqttdiscoverer.close()
     collector.close()
+    command_prompt.stop()
 
     #mqtt_client.close()
     print("Exiting...")

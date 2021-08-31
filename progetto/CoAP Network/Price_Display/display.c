@@ -58,6 +58,7 @@ void change_price(float updated_price){
 bool check_price_validity(float price){
 
   if(price < MINIMUM_PRICE){
+    LOG_DBG("[check_price_validity]: the received price is under %u!", MINIMUM_PRICE);
     return false;
   }
 

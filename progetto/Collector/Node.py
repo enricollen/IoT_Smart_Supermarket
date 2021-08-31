@@ -16,7 +16,7 @@ logger = logging.getLogger("Node_Class")
 logger.setLevel(level=logging.DEBUG)
 
 
-CHECK_PRESENCE_INTERVAL = 30 #in seconds
+CHECK_PRESENCE_INTERVAL = 50 #in seconds
 
 class Node:
     node_id = False

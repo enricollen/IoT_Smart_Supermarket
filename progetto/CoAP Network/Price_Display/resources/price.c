@@ -83,6 +83,8 @@ static void res_post_put_handler(coap_message_t *request, coap_message_t *respon
 	
 	if(!success) {
 		coap_set_status_code(response, BAD_REQUEST_4_00);
+		snprintf((char *)buffer, COAP_MAX_CHUNK_SIZE, "{\"price_updated\": false, \"reason\": \"price under minimum!\"}");
+		coap_set_payload(response, (uint8_t *)buffer, strlen((char *)buffer));
 		return;
 	}
 
