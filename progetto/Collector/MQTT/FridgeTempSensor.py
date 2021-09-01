@@ -23,7 +23,7 @@ NOW_KEY = "timestamp"
 
 DEFAULT_DESIRED_TEMP = 0.0
 
-TEMPERATURE_THRESHOLD_DIFF = 10
+TEMPERATURE_THRESHOLD_DIFF = 5
 
 class FridgeTempSensor(MqttClient, Node):
 
