@@ -64,7 +64,7 @@ static void res_post_put_handler(coap_message_t *request, coap_message_t *respon
 		//we need to check if the received price is acceptable
 		is_acceptable = check_price_validity(new_price);
 		
-		LOG_DBG("[price-resource | POST/PUT HANDLER] received 'new_price' | str_value : %.*s \t float_value : %f\n", (int)len, new_price_str, new_price);
+		LOG_DBG("[price-resource | POST/PUT HANDLER] received 'new_price' | str_value : %s \t float_value : %f\n", new_price_str, new_price);
 		
 		if( is_acceptable ) {
 			//do update

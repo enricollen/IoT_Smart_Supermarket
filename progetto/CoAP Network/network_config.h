@@ -115,9 +115,25 @@ inline void wait_connectivity(){
           //new note: the ctimer does not fit our case because we want to block the execution of the process, we do not want it to go to the next state (when the network is ok)
             //the best way we've found is to copy paste this code directly in the process_Thread
     }
-    LOG_DBG("[%.*s]: Successfully connected to network");
+    LOG_DBG("[%s]: Successfully connected to network");
 }
 */
 /*
 DOES NOT WORK BECAUSE COAP_BLOCKING_REQUEST CANNOT BE CALLED INSIDE A FUNCTION
 */
+
+void print_node_ip(){
+  char buffer[20];
+  size_t size = 20;
+
+  uip_ds6_addr_t *addr_struct = uip_ds6_get_global(ADDR_PREFERRED);
+
+  if(addr_struct != NULL){
+    uip_ipaddr_t * 	addr = & addr_struct->ipaddr;
+
+    uiplib_ipaddr_snprint	(	buffer, size, addr);
+
+    LOG_INFO("[print_node_ip] current_ip: %s \n", buffer);
+  }
+}
+

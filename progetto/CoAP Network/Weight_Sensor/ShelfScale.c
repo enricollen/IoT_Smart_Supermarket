@@ -97,14 +97,14 @@ PROCESS_THREAD(contiki_ng_br_coap_server, ev, data){
             PROCESS_WAIT_UNTIL(etimer_expired(&wait_connectivity_timer));
             etimer_reset(&wait_connectivity_timer);
         }
-      LOG_DBG("[%.*s]: Successfully connected to network\n");
+      LOG_DBG("[%s]: Successfully connected to network\n");
       status = CONNECTED_TO_NETWORK;
       //
     }
     if(status == CONNECTED_TO_NETWORK){
       if(id_initialized == false)
         if(!initialize_node_id())
-          LOG_ERR("[%.*s]: Unable to initialize Node ID\n", node_name);
+          LOG_ERR("[%s]: Unable to initialize Node ID\n", node_name);
 
       LOG_DBG("Connected to network\n");
 
@@ -128,7 +128,7 @@ PROCESS_THREAD(contiki_ng_br_coap_server, ev, data){
         PROCESS_WAIT_UNTIL(etimer_expired(&wait_registration));
       }
       status = CONNECTED_TO_COLLECTOR;
-      LOG_INFO("[%.*s]: Registration to Collector succeded\n", node_name);    
+      LOG_INFO("[%s]: Registration to Collector succeded\n", node_name);    
     //
     }
 

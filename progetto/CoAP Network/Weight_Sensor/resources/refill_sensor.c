@@ -47,7 +47,7 @@ static void res_post_put_handler(coap_message_t *request, coap_message_t *respon
 	int success = 1;
 
 	if((len = coap_get_post_variable(request, "refill", &refill))) {
-		LOG_DBG("refill %.*s\n", (int)len, refill);
+		LOG_DBG("refill %s\n", (int)len, refill);
 		
 		if(strncmp(refill, "TRUE", len) == 0 || strncmp(refill, "true", len) == 0  ) {
 			//do refill
