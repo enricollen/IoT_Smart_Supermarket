@@ -1,0 +1,12 @@
+1) Accesso ssh al testbed:
+    >> ssh -p 20XX -i utili/testbed-connection/key user@iot.dii.unipi.it
+
+2) Utente51 (Flashing Boarder Router + Tuneslip6)
+    >> make TARGET=cc26x0-cc13x0 BOARD=/launchpad/cc2650 PORT=/dev/ttyACM0 NODEID=0x0001 border-router.upload
+    >> make TARGET=cc26x0-cc13x0 PORT=/dev/ttyACM51 connect-router
+
+3) Utente53 (Flashing MQTT sensor code)
+    >> make TARGET=nrf52840 BOARD=dongle mqtt-client.dfu-upload  PORT=/dev/ttyACM53
+
+5) Port Tuneling with Cooja
+    >> ssh -L 1883:127.0.0.1:1883 -p 20XX -i /path/key user@iot.dii.unipi.it
