@@ -12,6 +12,8 @@
 #include "os/sys/log.h"
 #include "mqtt-client.h"
 
+#include "random.h"
+
 #include <string.h>
 #include <strings.h>
 /*---------------------------------------------------------------------------*/
@@ -145,7 +147,7 @@ static int consecutive_open_state_counter = 0;
 
 bool roll_dice(int probability){
 
-    if(random() % 100 <= probability){
+    if(random_rand() % 100 <= probability){
         return true;
     }
     else
