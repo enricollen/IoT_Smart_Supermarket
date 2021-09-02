@@ -257,6 +257,55 @@ void print_client_id(){
   LOG_INFO("[MQTT client_id]: %s\n", client_id);
 }
 
+#define FLOAT_TO_STRING_BUFFERS_NUMBER 2
+
+static unsigned short rotate = 0;
+
+static char str_float[FLOAT_TO_STRING_BUFFERS_NUMBER][20];
+
+// Converts a floating-point/double number to a string.
+static char* float_to_string(float n, int afterpoint)
+{
+
+    char temp[10];
+    
+    char * res = (char*) str_float[rotate];
+    
+    // Extract integer part
+    int ipart = (int)n;
+  
+    // Extract floating part
+    float fpart = n - (float)ipart;
+  
+    // convert integer part to string
+    //int i = intToStr(ipart, res, 0);
+  
+    sprintf(res, "%d", ipart);
+    sprintf(temp, "%d", ipart);
+
+    //int i = strlen(res);
+
+    // check for display option after point
+    if (afterpoint != 0) {
+        //res[i] = '.'; // add dot
+
+        // Get the value of fraction part upto given no.
+        // of points after dot. The third parameter 
+        // is needed to handle cases like 233.007
+        
+        for(int a = 0; a < afterpoint; a++){
+          fpart *= (float) 10.0F;
+        }
+        //fpart = fpart * pow(10, afterpoint);
+
+        sprintf(res, "%s.%d", temp, (int) fpart);
+    }
+
+    rotate = (rotate + 1) % FLOAT_TO_STRING_BUFFERS_NUMBER;
+
+    return res;
+}
+  
 /*---------------------------------------------------------------------------*/
 static void
 pub_handler(const char *topic, uint16_t topic_len, const uint8_t *chunk,
@@ -462,7 +511,7 @@ PROCESS_THREAD(mqtt_client_process, ev, data)
         #if ENABLE_SENSE_TEMPERATURE
         sense_temperature();
         
-        LOG_DBG("[sense_temperature]: door_state = %s | compressor_state = %s | current_temperature = %.2f | desired_temperature = %.2f \n", string_door_state[door_state], string_compressor_state[compressor_state], current_temperature, desired_temperature);
+        LOG_DBG("[sense_temperature]: door_state = %s | compressor_state = %s | current_temperature = %s | desired_temperature = %s \n", string_door_state[door_state], string_compressor_state[compressor_state], (char*)  float_to_string(current_temperature, 2), (char*) float_to_string(desired_temperature, 2) );
         
         #endif
       }
@@ -472,7 +521,7 @@ PROCESS_THREAD(mqtt_client_process, ev, data)
         if(last_publish_topic != TEMPERATURE){
             sprintf(pub_topic, "fridge/%s/temperature", client_id); //a different topic for each temperature sensor node
             LOG_DBG("[Publish Topic]: %s\n", pub_topic);
-            sprintf(app_buffer, "{\"temperature\": %.2f, \"timestamp\": %lu, \"unit\": \"celsius\", \"desired_temp\":%.2f}", current_temperature, clock_seconds(), desired_temperature);
+            sprintf(app_buffer, "{\"temperature\": %s, \"timestamp\": %lu, \"unit\": \"celsius\", \"desired_temp\":%s}", (char*) float_to_string(current_temperature, 2) , clock_seconds(), (char*) float_to_string(desired_temperature, 2) );
             mqtt_publish(&conn, NULL, pub_topic, (uint8_t *)app_buffer,
                     strlen(app_buffer), MQTT_QOS_LEVEL_1, MQTT_RETAIN_OFF);
         }
