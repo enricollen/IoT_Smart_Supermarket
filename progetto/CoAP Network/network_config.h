@@ -123,8 +123,8 @@ DOES NOT WORK BECAUSE COAP_BLOCKING_REQUEST CANNOT BE CALLED INSIDE A FUNCTION
 */
 
 void print_node_ip(){
-  char buffer[20];
-  size_t size = 20;
+  char buffer[40];
+  size_t size = 40;
 
   uip_ds6_addr_t *addr_struct = uip_ds6_get_global(ADDR_PREFERRED);
 

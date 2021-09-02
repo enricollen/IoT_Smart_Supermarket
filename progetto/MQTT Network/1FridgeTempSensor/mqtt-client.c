@@ -237,6 +237,26 @@ void update_desired_temp(float new_desired_temperature){
 
 #endif
 
+
+void print_node_ip(){
+  char buffer[40];
+  size_t size = 40;
+
+  uip_ds6_addr_t *addr_struct = uip_ds6_get_global(ADDR_PREFERRED);
+
+  if(addr_struct != NULL){
+    uip_ipaddr_t * 	addr = & addr_struct->ipaddr;
+
+    uiplib_ipaddr_snprint	(	buffer, size, addr);
+
+    LOG_INFO("[print_node_ip] current_ip: %s \n", buffer);
+  }
+}
+
+void print_client_id(){
+  LOG_INFO("[MQTT client_id]: %s\n", client_id);
+}
+
 /*---------------------------------------------------------------------------*/
 static void
 pub_handler(const char *topic, uint16_t topic_len, const uint8_t *chunk,
@@ -274,6 +294,9 @@ mqtt_event(struct mqtt_connection *m, mqtt_event_t event, void *data)
   }
   case MQTT_EVENT_DISCONNECTED: {
     printf("MQTT Disconnect. Reason %u\n", *((mqtt_event_t *)data));
+
+    print_node_ip();
+    print_client_id();
 
     state = STATE_DISCONNECTED;
     process_poll(&mqtt_client_process);
