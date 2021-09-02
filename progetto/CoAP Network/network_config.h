@@ -121,19 +121,3 @@ inline void wait_connectivity(){
 /*
 DOES NOT WORK BECAUSE COAP_BLOCKING_REQUEST CANNOT BE CALLED INSIDE A FUNCTION
 */
-
-void print_node_ip(){
-  char buffer[40];
-  size_t size = 40;
-
-  uip_ds6_addr_t *addr_struct = uip_ds6_get_global(ADDR_PREFERRED);
-
-  if(addr_struct != NULL){
-    uip_ipaddr_t * 	addr = & addr_struct->ipaddr;
-
-    uiplib_ipaddr_snprint	(	buffer, size, addr);
-
-    LOG_INFO("[print_node_ip] current_ip: %s \n", buffer);
-  }
-}
-

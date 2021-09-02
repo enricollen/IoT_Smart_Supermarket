@@ -5,6 +5,7 @@
 
 /* Log configuration */
 #include "sys/log.h"
+
 #define LOG_MODULE "PriceDisplay/price"
 #define LOG_LEVEL LOG_LEVEL_APP
 
@@ -15,6 +16,8 @@ extern void change_price(float updated_price);
 extern bool check_price_validity(float price);
 
 extern char sensor_id[];
+
+#include "../../../nodes-utilities.h"
 
 coap_resource_t res_price;
 //--------------------------------------------------------------
@@ -36,7 +39,7 @@ static void
 res_get_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
 	coap_set_header_content_format(response, APPLICATION_JSON);
-	snprintf((char *)buffer, COAP_MAX_CHUNK_SIZE, "{\"price\":%.2f,\"now\":%lu,\"last_chg\":%lu,\"id\":\"%s\"}", current_price, clock_seconds(), last_price_change, sensor_id);	//TODO:, sensor_id
+	snprintf((char *)buffer, COAP_MAX_CHUNK_SIZE, "{\"price\":%s,\"now\":%lu,\"last_chg\":%lu,\"id\":\"%s\"}", float_to_string(current_price, 2), clock_seconds(), last_price_change, sensor_id);	//TODO:, sensor_id
     coap_set_payload(response, (uint8_t *)buffer, strlen((char *)buffer));
 }
 
@@ -64,7 +67,7 @@ static void res_post_put_handler(coap_message_t *request, coap_message_t *respon
 		//we need to check if the received price is acceptable
 		is_acceptable = check_price_validity(new_price);
 		
-		LOG_DBG("[price-resource | POST/PUT HANDLER] received 'new_price' | str_value : %s \t float_value : %f\n", new_price_str, new_price);
+		LOG_DBG("[price-resource | POST/PUT HANDLER] received 'new_price' | str_value : %s \t float_value : %s\n", new_price_str, float_to_string(new_price, 2));
 		
 		if( is_acceptable ) {
 			//do update

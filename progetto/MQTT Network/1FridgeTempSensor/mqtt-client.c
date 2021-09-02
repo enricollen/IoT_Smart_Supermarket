@@ -237,6 +237,11 @@ void update_desired_temp(float new_desired_temperature){
 
 #endif
 
+#include "../../nodes-utilities.h"
+
+#ifndef PRINT_NODE_IP_DEFINED
+
+#define PRINT_NODE_IP_DEFINED
 
 void print_node_ip(){
   char buffer[40];
@@ -253,58 +258,18 @@ void print_node_ip(){
   }
 }
 
+#endif
+
+#ifndef PRINT_CLIENT_ID_DEFINED
+
+#define PRINT_CLIENT_ID_DEFINED
+
+extern char * client_id;
+
 void print_client_id(){
   LOG_INFO("[MQTT client_id]: %s\n", client_id);
 }
-
-#define FLOAT_TO_STRING_BUFFERS_NUMBER 2
-
-static unsigned short rotate = 0;
-
-static char str_float[FLOAT_TO_STRING_BUFFERS_NUMBER][20];
-
-// Converts a floating-point/double number to a string.
-static char* float_to_string(float n, int afterpoint)
-{
-
-    char temp[10];
-    
-    char * res = (char*) str_float[rotate];
-    
-    // Extract integer part
-    int ipart = (int)n;
-  
-    // Extract floating part
-    float fpart = n - (float)ipart;
-  
-    // convert integer part to string
-    //int i = intToStr(ipart, res, 0);
-  
-    sprintf(res, "%d", ipart);
-    sprintf(temp, "%d", ipart);
-
-    //int i = strlen(res);
-
-    // check for display option after point
-    if (afterpoint != 0) {
-        //res[i] = '.'; // add dot
-
-        // Get the value of fraction part upto given no.
-        // of points after dot. The third parameter 
-        // is needed to handle cases like 233.007
-        
-        for(int a = 0; a < afterpoint; a++){
-          fpart *= (float) 10.0F;
-        }
-        //fpart = fpart * pow(10, afterpoint);
-
-        sprintf(res, "%s.%d", temp, (int) fpart);
-    }
-
-    rotate = (rotate + 1) % FLOAT_TO_STRING_BUFFERS_NUMBER;
-
-    return res;
-}
+#endif
   
 /*---------------------------------------------------------------------------*/
 static void

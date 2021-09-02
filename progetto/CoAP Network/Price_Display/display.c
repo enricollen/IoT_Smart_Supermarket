@@ -21,7 +21,41 @@
 
 #define SENSOR_TYPE "price_display"
 const char* node_name = "Price Display and CoAP Server";
+
+#ifndef PRINT_NODE_IP_DEFINED
+
+#define PRINT_NODE_IP_DEFINED
+
+void print_node_ip(){
+  char buffer[40];
+  size_t size = 40;
+
+  uip_ds6_addr_t *addr_struct = uip_ds6_get_global(ADDR_PREFERRED);
+
+  if(addr_struct != NULL){
+    uip_ipaddr_t * 	addr = & addr_struct->ipaddr;
+
+    uiplib_ipaddr_snprint	(	buffer, size, addr);
+
+    LOG_INFO("[print_node_ip] current_ip: %s \n", buffer);
+  }
+}
+
+#endif
+
+#ifndef PRINT_CLIENT_ID_DEFINED
+
+#define PRINT_CLIENT_ID_DEFINED
+
+extern char * client_id;
+
+void print_client_id(){
+  LOG_INFO("[MQTT client_id]: %s\n", client_id);
+}
+#endif
+
 #include "../network_config.h"
+#include "../../nodes-utilities.h"
 
 
 
@@ -58,7 +92,7 @@ void change_price(float updated_price){
 bool check_price_validity(float price){
 
   if(price < MINIMUM_PRICE){
-    LOG_DBG("[check_price_validity]: the received price is under %f!", (float) MINIMUM_PRICE);
+    LOG_DBG("[check_price_validity]: the received price is under %s!\n", float_to_string( (float) MINIMUM_PRICE, 2));
     return false;
   }
 
