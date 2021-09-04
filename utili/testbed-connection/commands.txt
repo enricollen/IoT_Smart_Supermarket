@@ -9,7 +9,7 @@
     >> ssh -p 20XX -i utili/testbed-connection/key user@iot.dii.unipi.it
 
 2) Utente51 (Flashing Boarder Router + Tuneslip6)
-    >> make TARGET=nrf52840 BOARD=dongle PORT=/dev/ttyACM51 NODEID=0x0033 border-router.dfu-upload
+    >> make TARGET=nrf52840 BOARD=dongle PORT=/dev/ttyACM51 border-router.dfu-upload
     >> make TARGET=nrf52840 PORT=/dev/ttyACM51 connect-router
 
 3) Utente53 (Flashing MQTT sensor code)
