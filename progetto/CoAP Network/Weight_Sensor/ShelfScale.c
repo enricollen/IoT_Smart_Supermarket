@@ -19,6 +19,28 @@
 
 #define SENSOR_TYPE "shelf_scale"
 const char* node_name = "Weight&Refill Sensors and CoAP Server";
+
+#ifndef PRINT_NODE_IP_DEFINED
+
+#define PRINT_NODE_IP_DEFINED
+
+void print_node_ip(){
+  char buffer[40];
+  size_t size = 40;
+
+  uip_ds6_addr_t *addr_struct = uip_ds6_get_global(ADDR_PREFERRED);
+
+  if(addr_struct != NULL){
+    uip_ipaddr_t * 	addr = & addr_struct->ipaddr;
+
+    uiplib_ipaddr_snprint	(	buffer, size, addr);
+
+    LOG_INFO("[print_node_ip] current_ip: %s \n", buffer);
+  }
+}
+
+#endif
+
 #include "../network_config.h"
 
 
@@ -107,6 +129,8 @@ PROCESS_THREAD(contiki_ng_br_coap_server, ev, data){
           LOG_ERR("[%s]: Unable to initialize Node ID\n", node_name);
 
       LOG_DBG("Connected to network\n");
+      print_node_ip();
+
 
       //register_to_collector();
       LOG_INFO("Connecting to collector...\n");

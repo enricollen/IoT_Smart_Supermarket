@@ -1,0 +1,1 @@
+ssh -p 2051 -i key user@iot.dii.unipi.it "cd contiki-ng/paciollen/smart_supermarket/Border_Router; make TARGET=nrf52840 BOARD=dongle PORT=/dev/ttyACM51 border-router.dfu-upload; make TARGET=nrf52840 PORT=/dev/ttyACM51 connect-router"

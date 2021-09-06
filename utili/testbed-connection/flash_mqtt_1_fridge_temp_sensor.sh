@@ -1,0 +1,1 @@
+ssh -p 2053 -i key user@iot.dii.unipi.it "cd contiki-ng/paciollen/smart_supermarket/MQTT_Network/1FridgeTempSensor; make TARGET=nrf52840 BOARD=dongle mqtt-client.dfu-upload  PORT=/dev/ttyACM53; sleep 2; make login TARGET=nrf52840 BOARD=dongle PORT=/dev/ttyACM53"

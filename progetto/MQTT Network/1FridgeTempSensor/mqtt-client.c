@@ -264,7 +264,7 @@ void print_node_ip(){
 
 #define PRINT_CLIENT_ID_DEFINED
 
-extern char * client_id;
+//extern char * client_id;
 
 void print_client_id(){
   LOG_INFO("[MQTT client_id]: %s\n", client_id);

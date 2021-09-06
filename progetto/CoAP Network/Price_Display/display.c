@@ -43,17 +43,6 @@ void print_node_ip(){
 
 #endif
 
-#ifndef PRINT_CLIENT_ID_DEFINED
-
-#define PRINT_CLIENT_ID_DEFINED
-
-extern char * client_id;
-
-void print_client_id(){
-  LOG_INFO("[MQTT client_id]: %s\n", client_id);
-}
-#endif
-
 #include "../network_config.h"
 #include "../../nodes-utilities.h"
 
