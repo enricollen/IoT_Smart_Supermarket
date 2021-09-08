@@ -8,6 +8,13 @@
 #include "net/ipv6/uip-icmp6.h"
 #include "net/ipv6/uip-ds6.h"
 
+#define DO_ROUND_THE_FLOATS_USING_ROUND false
+#define DO_ROUND_THE_FLOATS_MANUALLY true
+
+#if DO_ROUND_THE_FLOATS_USING_ROUND
+#include <math.h>
+#endif
+
 
 // returns a char* to a buffer containing the base10 representation of a float as string
 #define FLOAT_TO_STRING_BUFFERS_NUMBER 2
@@ -23,6 +30,12 @@ static char* float_to_string(float n, int afterpoint)
     char temp[10];
     
     char * res = (char*) str_float[rotate];
+
+    short is_negative = n < 0.0F;
+    
+    if(is_negative){
+        n = n * -1.0F;
+    }
     
     // Extract integer part
     int ipart = (int)n;
@@ -31,27 +44,36 @@ static char* float_to_string(float n, int afterpoint)
     float fpart = n - (float)ipart;
   
     // convert integer part to string
-    //int i = intToStr(ipart, res, 0);
-  
-    sprintf(res, "%d", ipart);
-    sprintf(temp, "%d", ipart);
 
-    //int i = strlen(res);
+    if(is_negative){
+        sprintf(res, "-%d", ipart);
+        sprintf(temp, "-%d", ipart);
+    }else{
+        sprintf(res, "%d", ipart);
+        sprintf(temp, "%d", ipart);
+    }  
 
     // check for display option after point
     if (afterpoint != 0) {
-        //res[i] = '.'; // add dot
 
-        // Get the value of fraction part upto given no.
-        // of points after dot. The third parameter 
-        // is needed to handle cases like 233.007
+
+        // Get the value of fraction part upto given num of points after dot
         
         for(int a = 0; a < afterpoint; a++){
           fpart *= (float) 10.0F;
         }
         //fpart = fpart * pow(10, afterpoint);
-
+        #if DO_ROUND_THE_FLOATS_USING_ROUND
+        float rounded_fpart = round(fpart);
+        sprintf(res, "%s.%d", temp, (int) rounded_fpart);
+        #elif DO_ROUND_THE_FLOATS_MANUALLY
+        if( (int) fpart != (int) fpart + 0.1F){
+          fpart = fpart + 0.1F;
+        }
         sprintf(res, "%s.%d", temp, (int) fpart);
+        #else
+        sprintf(res, "%s.%d", temp, (int) fpart);
+        #endif
     }
 
     rotate = (rotate + 1) % FLOAT_TO_STRING_BUFFERS_NUMBER;
