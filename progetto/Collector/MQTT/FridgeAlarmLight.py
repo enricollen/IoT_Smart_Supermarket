@@ -169,7 +169,7 @@ CREATE TABLE `fridge_alarm_light` (
   `node_id` varchar(50) NOT NULL,
   `timestamp` timestamp NOT NULL DEFAULT current_timestamp(),
   `node_ts_in_seconds` INT NOT NULL COMMENT 'seconds since last node restart',
-  `state` VARCHAR(5) NOT NULL,
+  `state` ENUM ('OFF', 'ON') NOT NULL, /*VARCHAR(5) NOT NULL,*/
   `last_state_change` timestamp,
   PRIMARY KEY (`ID`)
 ) ENGINE=InnoDB AUTO_INCREMENT=277 DEFAULT CHARSET=utf8mb4;
