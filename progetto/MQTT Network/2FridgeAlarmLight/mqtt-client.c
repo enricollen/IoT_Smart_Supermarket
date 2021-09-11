@@ -264,8 +264,8 @@ PROCESS_THREAD(mqtt_client_process, ev, data)
 
   // Initialize the ClientID as MAC address
   snprintf(client_id, BUFFER_SIZE, "%02x%02x%02x",
-                     linkaddr_node_addr.u8[5],
-                     linkaddr_node_addr.u8[6], linkaddr_node_addr.u8[7]);
+                     linkaddr_node_addr.u8[LINKADDR_SIZE-3],
+                     linkaddr_node_addr.u8[LINKADDR_SIZE-2], linkaddr_node_addr.u8[LINKADDR_SIZE-1]);
 
   // Broker registration					 
   mqtt_register(&conn, &mqtt_client_process, client_id, mqtt_event,
@@ -302,7 +302,8 @@ PROCESS_THREAD(mqtt_client_process, ev, data)
 						   (DEFAULT_PUBLISH_INTERVAL * 3) / CLOCK_SECOND,
 						   MQTT_CLEAN_SESSION_ON);
         if(status == MQTT_STATUS_OK){
-            LOG_INFO("[mqtt_connect]: connected successfully!\n");
+            LOG_INFO("[mqtt_connect]: connection request sent!\n");
+            LOG_INFO("[MQTT client_id]: %s\n", client_id);
             state = STATE_CONNECTING;
 
         }else{
